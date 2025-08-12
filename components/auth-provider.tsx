@@ -11,7 +11,7 @@ import {
   signOut,
 } from "firebase/auth"
 import { doc, getDoc, setDoc } from "firebase/firestore"
-import { auth, db } from "@/lib/firebase"
+import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
 
 interface UserProfile {
   uid: string
@@ -34,6 +34,7 @@ interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  isFirebaseConfigured: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, displayName?: string) => Promise<void>
   logout: () => Promise<void>
@@ -47,14 +48,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isFirebaseConfigured || !auth) {
+      setLoading(false)
+      return
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
 
-      if (user) {
-        // Fetch user profile from Firestore
-        const profileDoc = await getDoc(doc(db, "users", user.uid))
-        if (profileDoc.exists()) {
-          setProfile(profileDoc.data() as UserProfile)
+      if (user && db) {
+        try {
+          // Fetch user profile from Firestore
+          const profileDoc = await getDoc(doc(db, "users", user.uid))
+          if (profileDoc.exists()) {
+            setProfile(profileDoc.data() as UserProfile)
+          }
+        } catch (error) {
+          console.warn("Failed to fetch user profile:", error)
         }
       } else {
         setProfile(null)
@@ -67,10 +77,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    if (!isFirebaseConfigured || !auth) {
+      throw new Error("Firebase is not configured. Please set up your environment variables.")
+    }
     await signInWithEmailAndPassword(auth, email, password)
   }
 
   const signUp = async (email: string, password: string, displayName?: string) => {
+    if (!isFirebaseConfigured || !auth || !db) {
+      throw new Error("Firebase is not configured. Please set up your environment variables.")
+    }
+
     const { user } = await createUserWithEmailAndPassword(auth, email, password)
 
     // Create user profile in Firestore
@@ -94,11 +111,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
+    if (!isFirebaseConfigured || !auth) {
+      throw new Error("Firebase is not configured. Please set up your environment variables.")
+    }
     await signOut(auth)
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, profile, loading, isFirebaseConfigured, signIn, signUp, logout }}>
+      {children}
+    </AuthContext.Provider>
   )
 }
 
