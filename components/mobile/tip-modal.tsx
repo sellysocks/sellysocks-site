@@ -64,8 +64,8 @@ export function TipModal({ isOpen, onClose, recipientName, onSendTip }: TipModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-card border-border max-w-sm mx-auto">
-        <DialogHeader className="flex flex-row items-center justify-between">
+      <DialogContent className="bg-card border-border max-w-sm mx-auto max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="flex flex-row items-center justify-between sticky top-0 bg-card z-10 pb-4">
           <DialogTitle className="text-lg font-semibold text-white">Send Tip to {recipientName}</DialogTitle>
           <Button
             variant="ghost"
@@ -77,7 +77,7 @@ export function TipModal({ isOpen, onClose, recipientName, onSendTip }: TipModal
           </Button>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pb-4">
           {/* Preset Amounts */}
           <div>
             <label className="text-sm font-medium text-white mb-3 block">Choose Amount</label>
@@ -155,7 +155,7 @@ export function TipModal({ isOpen, onClose, recipientName, onSendTip }: TipModal
           <Button
             onClick={handleSendTip}
             disabled={finalAmount < 1 || isLoading}
-            className="w-full bg-pink hover:bg-pink/90 text-white font-medium h-12"
+            className="w-full bg-pink hover:bg-pink/90 text-white font-medium h-12 sticky bottom-0 bg-card"
           >
             {isLoading ? (
               "Sending..."
