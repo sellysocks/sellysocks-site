@@ -18,7 +18,7 @@ const mockOrders = [
     itemImage: "/cozy-cotton-socks.png",
     price: 25,
     seller: "Emma Rose",
-    sellerId: "emma-rose",
+    sellerId: "emmarose", // Updated from "emma-rose" to "emmarose"
     status: "delivered",
     orderDate: "2024-01-10",
     deliveryDate: "2024-01-15",
@@ -33,7 +33,7 @@ const mockOrders = [
     itemImage: "/silk-stockings.png",
     price: 45,
     seller: "Sophie Luxe",
-    sellerId: "sophie-luxe",
+    sellerId: "1", // Updated from "sophie-luxe" to "1"
     status: "shipped",
     orderDate: "2024-01-12",
     estimatedDelivery: "2024-01-18",
@@ -48,7 +48,7 @@ const mockOrders = [
     itemImage: "/lace-thigh-high-socks.png",
     price: 18,
     seller: "Emma Rose",
-    sellerId: "emma-rose",
+    sellerId: "emmarose", // Updated from "emma-rose" to "emmarose"
     status: "processing",
     orderDate: "2024-01-14",
     estimatedDelivery: "2024-01-20",
