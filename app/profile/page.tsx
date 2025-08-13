@@ -16,6 +16,7 @@ import {
   CreditCard,
 } from "lucide-react"
 import Link from "next/link"
+import { MobileLayout } from "@/components/mobile/mobile-layout"
 
 export default function ProfilePage() {
   const { user, profile, loading, needsProfileSetup } = useAuth()
@@ -123,10 +124,9 @@ export default function ProfilePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-between p-4">
+    <MobileLayout
+      customHeader={
+        <div className="flex items-center justify-between p-4 bg-background/95 backdrop-blur-sm border-b border-border">
           <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-white hover:bg-card">
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -140,12 +140,11 @@ export default function ProfilePage() {
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 pb-24">
+      }
+    >
+      <div className="p-4 space-y-6">
         {/* Profile Card */}
-        <div className="bg-card rounded-2xl p-6 shadow-lg border border-border mb-6">
+        <div className="bg-card rounded-2xl p-6 shadow-lg border border-border">
           {/* Top Profile Block */}
           <div className="text-center space-y-4">
             {/* Avatar */}
@@ -232,34 +231,6 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
-
-      {/* Bottom Tab Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-pb">
-        <div className="flex items-center justify-around py-2">
-          <Link href="/" className="flex flex-col items-center gap-1 p-2">
-            <div className="w-6 h-6 bg-muted-foreground/20 rounded"></div>
-            <span className="text-xs text-muted-foreground">Home</span>
-          </Link>
-          <Link href="/sellers" className="flex flex-col items-center gap-1 p-2">
-            <div className="w-6 h-6 bg-muted-foreground/20 rounded"></div>
-            <span className="text-xs text-muted-foreground">Sellers</span>
-          </Link>
-          <Link href="/sell" className="flex flex-col items-center gap-1 p-2">
-            <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
-              <span className="text-white text-lg font-semibold">+</span>
-            </div>
-            <span className="text-xs text-accent">Sell</span>
-          </Link>
-          <Link href="/messages" className="flex flex-col items-center gap-1 p-2">
-            <div className="w-6 h-6 bg-muted-foreground/20 rounded"></div>
-            <span className="text-xs text-muted-foreground">Messages</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center gap-1 p-2">
-            <div className="w-6 h-6 bg-accent rounded"></div>
-            <span className="text-xs text-accent">Profile</span>
-          </Link>
-        </div>
-      </div>
-    </div>
+    </MobileLayout>
   )
 }
