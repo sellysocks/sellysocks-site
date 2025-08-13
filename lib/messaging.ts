@@ -13,41 +13,61 @@ export class MessagingClient {
     this.currentThreadId = threadId
     this.currentUserId = userId
 
-    this.eventSource = new EventSource(`/api/messages/events?threadId=${threadId}&userId=${userId}`)
+    try {
+      this.eventSource = new EventSource(`/api/messages/events?threadId=${threadId}&userId=${userId}`)
 
-    this.eventSource.onopen = () => {
-      this.connectionHandlers.forEach((handler) => handler(true))
-    }
-
-    this.eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        this.messageHandlers.forEach((handler) => handler(data))
-
-        if (data.type === "new_message") {
-          console.log("📨 New message received:", data.message.text)
-        } else if (data.type === "message_status_update") {
-          console.log("✓ Message status updated:", data.status)
-        } else if (data.type === "user_online") {
-          console.log("🟢 User came online:", data.userId)
-        } else if (data.type === "user_offline") {
-          console.log("🔴 User went offline:", data.userId)
-        }
-      } catch (error) {
-        console.error("Failed to parse SSE message:", error)
+      this.eventSource.onopen = () => {
+        console.log("✅ SSE connection established")
+        this.connectionHandlers.forEach((handler) => handler(true))
       }
-    }
 
-    this.eventSource.onerror = (error) => {
-      console.error("SSE connection error:", error)
-      this.connectionHandlers.forEach((handler) => handler(false))
+      this.eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          this.messageHandlers.forEach((handler) => handler(data))
 
-      setTimeout(() => {
-        if (this.currentThreadId) {
-          console.log("🔄 Attempting to reconnect...")
-          this.connect(this.currentThreadId, this.currentUserId)
+          if (data.type === "new_message") {
+            console.log("📨 New message received:", data.message.text)
+          } else if (data.type === "message_status_update") {
+            console.log("✓ Message status updated:", data.status)
+          } else if (data.type === "user_online") {
+            console.log("🟢 User came online:", data.userId)
+          } else if (data.type === "user_offline") {
+            console.log("🔴 User went offline:", data.userId)
+          } else if (data.type === "connected") {
+            console.log("🔗 Connected to thread:", data.threadId)
+          } else if (data.type === "heartbeat") {
+            // Silent heartbeat
+          }
+        } catch (error) {
+          console.error("Failed to parse SSE message:", error)
         }
-      }, 5000)
+      }
+
+      this.eventSource.onerror = (error) => {
+        console.error("SSE connection error:", error)
+        console.log("EventSource readyState:", this.eventSource?.readyState)
+
+        if (this.eventSource?.readyState === EventSource.CLOSED) {
+          console.log("SSE connection was closed")
+        } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
+          console.log("SSE connection is reconnecting...")
+          return // Don't trigger reconnection if already connecting
+        }
+
+        this.connectionHandlers.forEach((handler) => handler(false))
+
+        // Only reconnect if we have a current thread and connection is closed
+        if (this.currentThreadId && this.eventSource?.readyState === EventSource.CLOSED) {
+          setTimeout(() => {
+            console.log("🔄 Attempting to reconnect...")
+            this.connect(this.currentThreadId!, this.currentUserId)
+          }, 5000)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to create SSE connection:", error)
+      this.connectionHandlers.forEach((handler) => handler(false))
     }
   }
 
