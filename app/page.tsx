@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,6 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Heart, Search } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/components/auth-provider"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 // Mock data for demo
 const featuredItems = [
@@ -54,6 +59,29 @@ const featuredItems = [
 ]
 
 export default function HomePage() {
+  const { isFavourited, addToFavourites, removeFromFavourites } = useAuth()
+  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
+
+  const handleFavouriteToggle = async (itemId: string) => {
+    try {
+      if (isFavourited(itemId)) {
+        await removeFromFavourites(itemId)
+      } else {
+        await addToFavourites(itemId)
+      }
+    } catch (error) {
+      console.error("Error toggling favourite:", error)
+    }
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
   return (
     <MobileLayout
       customHeader={
@@ -69,13 +97,15 @@ export default function HomePage() {
 
       {/* Search & Filters */}
       <div className="px-4 mb-6">
-        <div className="relative mb-4">
+        <form onSubmit={handleSearch} className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#B4B6C2] h-4 w-4" />
           <Input
             placeholder="Search items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-[#15161C] border-[#262833] text-white placeholder:text-[#B4B6C2]"
           />
-        </div>
+        </form>
 
         <div className="flex gap-2 overflow-x-auto pb-2">
           <Select>
@@ -134,8 +164,11 @@ export default function HomePage() {
                   size="sm"
                   variant="secondary"
                   className="absolute top-2 right-2 w-8 h-8 p-0 bg-black/50 hover:bg-black/70"
+                  onClick={() => handleFavouriteToggle(item.id)}
                 >
-                  <Heart className="h-4 w-4 text-white" />
+                  <Heart
+                    className={`h-4 w-4 ${isFavourited(item.id) ? "fill-[#FF4D8D] text-[#FF4D8D]" : "text-white"}`}
+                  />
                 </Button>
               </div>
 

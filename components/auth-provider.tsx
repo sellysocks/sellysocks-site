@@ -21,6 +21,7 @@ interface UserProfile {
   verifiedSeller: boolean
   stripeAccountId?: string
   payoutsEnabled?: boolean
+  favourites?: string[]
   stats: {
     itemsSold: number
     totalEarnings: number
@@ -37,9 +38,12 @@ interface AuthContextType {
   isFirebaseConfigured: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, displayName?: string) => Promise<void>
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void> // Added updateProfile method
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>
   logout: () => Promise<void>
-  needsProfileSetup: () => boolean // Added profile setup check
+  needsProfileSetup: () => boolean
+  addToFavourites: (itemId: string) => Promise<void>
+  removeFromFavourites: (itemId: string) => Promise<void>
+  isFavourited: (itemId: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -61,6 +65,7 @@ const mockProfile: UserProfile = {
   verifiedSeller: true,
   stripeAccountId: "acct_demo123",
   payoutsEnabled: true,
+  favourites: [],
   stats: {
     itemsSold: 12,
     totalEarnings: 240,
@@ -133,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       verifiedSeller: false,
       stripeAccountId: undefined,
       payoutsEnabled: false,
+      favourites: [],
       stats: {
         itemsSold: 0,
         totalEarnings: 0,
@@ -167,6 +173,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Profile updated:", updatedProfile)
   }
 
+  const addToFavourites = async (itemId: string) => {
+    if (!profile) throw new Error("No profile available")
+
+    const currentFavourites = profile.favourites || []
+    if (!currentFavourites.includes(itemId)) {
+      const updatedFavourites = [...currentFavourites, itemId]
+      await updateProfile({ favourites: updatedFavourites })
+    }
+  }
+
+  const removeFromFavourites = async (itemId: string) => {
+    if (!profile) throw new Error("No profile available")
+
+    const currentFavourites = profile.favourites || []
+    const updatedFavourites = currentFavourites.filter((id) => id !== itemId)
+    await updateProfile({ favourites: updatedFavourites })
+  }
+
+  const isFavourited = (itemId: string) => {
+    if (!profile) return false
+    return (profile.favourites || []).includes(itemId)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -176,9 +205,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isFirebaseConfigured,
         signIn,
         signUp,
-        updateProfile, // Added updateProfile to context
+        updateProfile,
         logout,
-        needsProfileSetup, // Added needsProfileSetup to context
+        needsProfileSetup,
+        addToFavourites,
+        removeFromFavourites,
+        isFavourited,
       }}
     >
       {children}

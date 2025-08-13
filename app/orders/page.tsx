@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/components/auth-provider"
+import { ReviewModal } from "@/components/mobile/review-modal"
 import { Search, Package, MessageCircle, Star } from "lucide-react"
 import Link from "next/link"
 
@@ -26,6 +27,7 @@ const mockOrders = [
     deliveryDate: "2024-01-23",
     trackingNumber: "RM123456789GB",
     canReview: true,
+    hasReviewed: false,
   },
   {
     id: "order-2",
@@ -40,6 +42,7 @@ const mockOrders = [
     estimatedDelivery: "2024-01-25",
     trackingNumber: "RM987654321GB",
     canReview: false,
+    hasReviewed: false,
   },
   {
     id: "order-3",
@@ -53,6 +56,7 @@ const mockOrders = [
     orderDate: "2024-01-24",
     estimatedDelivery: "2024-01-27",
     canReview: false,
+    hasReviewed: false,
   },
 ]
 
@@ -60,6 +64,9 @@ export default function OrdersPage() {
   const { user, profile } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [reviewModalOpen, setReviewModalOpen] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<any>(null)
+  const [orders, setOrders] = useState(mockOrders)
 
   if (!user || !profile) {
     return (
@@ -75,7 +82,7 @@ export default function OrdersPage() {
     )
   }
 
-  const filteredOrders = mockOrders.filter((order) => {
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.itemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.sellerName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -111,6 +118,16 @@ export default function OrdersPage() {
       default:
         return status
     }
+  }
+
+  const handleReviewClick = (order: any) => {
+    setSelectedOrder(order)
+    setReviewModalOpen(true)
+  }
+
+  const handleReviewSubmitted = () => {
+    // Update the order to mark as reviewed
+    setOrders((prev) => prev.map((order) => (order.id === selectedOrder?.id ? { ...order, hasReviewed: true } : order)))
   }
 
   return (
@@ -210,15 +227,21 @@ export default function OrdersPage() {
                         Message
                       </Link>
                     </Button>
-                    {order.canReview && (
+                    {order.canReview && !order.hasReviewed && (
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleReviewClick(order)}
                         className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent text-xs h-7"
                       >
                         <Star className="h-3 w-3 mr-1" />
                         Review
                       </Button>
+                    )}
+                    {order.hasReviewed && (
+                      <Badge variant="secondary" className="text-xs bg-green-600/20 text-green-400 border-0">
+                        Reviewed
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -240,6 +263,16 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      {selectedOrder && (
+        <ReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          order={selectedOrder}
+          onReviewSubmitted={handleReviewSubmitted}
+        />
+      )}
     </MobileLayout>
   )
 }

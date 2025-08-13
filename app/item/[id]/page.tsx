@@ -8,6 +8,7 @@ import { Heart, MessageCircle, Share, ChevronLeft, ChevronRight } from "lucide-r
 import Link from "next/link"
 import { useState } from "react"
 import { notFound } from "next/navigation"
+import { useAuth } from "@/components/auth-provider"
 
 // Mock data for items
 const itemsData = {
@@ -78,7 +79,7 @@ const itemsData = {
 
 export default function ItemPage({ params }: { params: { id: string } }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isFavorited, setIsFavorited] = useState(false)
+  const { isFavourited, addToFavourites, removeFromFavourites } = useAuth()
 
   const item = itemsData[params.id as keyof typeof itemsData]
 
@@ -92,6 +93,20 @@ export default function ItemPage({ params }: { params: { id: string } }) {
 
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + item.images.length) % item.images.length)
+  }
+
+  const isItemFavourited = isFavourited(item.id)
+
+  const handleFavouriteToggle = async () => {
+    try {
+      if (isItemFavourited) {
+        await removeFromFavourites(item.id)
+      } else {
+        await addToFavourites(item.id)
+      }
+    } catch (error) {
+      console.error("Error toggling favourite:", error)
+    }
   }
 
   return (
@@ -158,9 +173,9 @@ export default function ItemPage({ params }: { params: { id: string } }) {
             variant="ghost"
             size="sm"
             className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2"
-            onClick={() => setIsFavorited(!isFavorited)}
+            onClick={handleFavouriteToggle}
           >
-            <Heart className={`h-5 w-5 ${isFavorited ? "fill-[#FF4D8D] text-[#FF4D8D]" : ""}`} />
+            <Heart className={`h-5 w-5 ${isItemFavourited ? "fill-[#FF4D8D] text-[#FF4D8D]" : ""}`} />
           </Button>
         </div>
 

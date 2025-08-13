@@ -1,3 +1,5 @@
+"use client"
+
 import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -6,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Star, Heart, MessageCircle, MapPin, Award } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { useEffect, useState } from "react"
 
 // Mock seller data
 const sellers = {
@@ -127,6 +130,9 @@ interface SellerPageProps {
 
 export default function SellerPage({ params }: SellerPageProps) {
   const seller = sellers[params.id as keyof typeof sellers]
+  const [reviews, setReviews] = useState<any[]>([])
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
+  const [loadingReviews, setLoadingReviews] = useState(true)
 
   if (!seller) {
     notFound()
@@ -134,10 +140,32 @@ export default function SellerPage({ params }: SellerPageProps) {
 
   const messageThreadId = `thread-${seller.id.replace("-", "")}`
 
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch(`/api/reviews/${seller.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setReviews(data.reviews)
+          setReviewStats({
+            averageRating: data.averageRating,
+            totalReviews: data.totalReviews,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error)
+      } finally {
+        setLoadingReviews(false)
+      }
+    }
+
+    fetchReviews()
+  }, [seller.id])
+
   return (
     <MobileLayout
       title={seller.displayName}
-      subtitle={`${seller.stats.rating} ⭐ • ${seller.stats.reviewCount} reviews`}
+      subtitle={`${reviewStats.averageRating || seller.stats.rating} ⭐ • ${reviewStats.totalReviews || seller.stats.reviewCount} reviews`}
       showBackButton={true}
     >
       {/* Cover & Profile Header */}
@@ -173,8 +201,8 @@ export default function SellerPage({ params }: SellerPageProps) {
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium text-white">{seller.stats.rating}</span>
-                    <span className="text-[#B4B6C2]">({seller.stats.reviewCount})</span>
+                    <span className="font-medium text-white">{reviewStats.averageRating || seller.stats.rating}</span>
+                    <span className="text-[#B4B6C2]">({reviewStats.totalReviews || seller.stats.reviewCount})</span>
                   </div>
                   <div className="flex items-center gap-1 text-[#B4B6C2]">
                     <MapPin className="h-4 w-4" />
@@ -233,7 +261,7 @@ export default function SellerPage({ params }: SellerPageProps) {
               value="reviews"
               className="text-[#B4B6C2] data-[state=active]:text-white data-[state=active]:bg-[#262833]"
             >
-              Reviews ({seller.stats.reviewCount})
+              Reviews ({reviewStats.totalReviews || seller.stats.reviewCount})
             </TabsTrigger>
           </TabsList>
 
@@ -294,7 +322,9 @@ export default function SellerPage({ params }: SellerPageProps) {
                     <div className="text-sm text-[#B4B6C2]">Items Sold</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-bold text-xl text-[#FF4D8D]">{seller.stats.rating}</div>
+                    <div className="font-bold text-xl text-[#FF4D8D]">
+                      {reviewStats.averageRating || seller.stats.rating}
+                    </div>
                     <div className="text-sm text-[#B4B6C2]">Average Rating</div>
                   </div>
                 </div>
@@ -322,50 +352,51 @@ export default function SellerPage({ params }: SellerPageProps) {
 
           <TabsContent value="reviews" className="mt-6">
             <div className="space-y-4">
-              <Card className="bg-[#15161C] border-[#262833]">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <img src="/diverse-user-avatars.png" alt="Reviewer" className="w-10 h-10 rounded-full" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium text-white">Sarah M.</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          ))}
+              {loadingReviews ? (
+                <div className="text-center py-8">
+                  <div className="text-[#B4B6C2]">Loading reviews...</div>
+                </div>
+              ) : reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <Card key={review.id} className="bg-[#15161C] border-[#262833]">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={review.reviewerAvatar || "/placeholder.svg"}
+                          alt="Reviewer"
+                          className="w-10 h-10 rounded-full"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium text-white">{review.reviewerName}</span>
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-3 w-3 ${
+                                    i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-[#B4B6C2]"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs text-[#B4B6C2]">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          {review.comment && <p className="text-sm text-[#B4B6C2]">{review.comment}</p>}
                         </div>
-                        <span className="text-xs text-[#B4B6C2]">2 days ago</span>
                       </div>
-                      <p className="text-sm text-[#B4B6C2]">
-                        Amazing quality and exactly as described! Emma was so sweet and the packaging was perfect. Will
-                        definitely buy again!
-                      </p>
-                    </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-[#B4B6C2] mb-2">No reviews yet</div>
+                  <div className="text-sm text-[#B4B6C2]">
+                    Reviews will appear here after customers purchase and review items from this seller.
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#15161C] border-[#262833]">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <img src="/diverse-user-avatar-set-2.png" alt="Reviewer" className="w-10 h-10 rounded-full" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium text-white">Jessica L.</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </div>
-                        <span className="text-xs text-[#B4B6C2]">1 week ago</span>
-                      </div>
-                      <p className="text-sm text-[#B4B6C2]">
-                        Super fast shipping and great communication. The item was even better than expected!
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

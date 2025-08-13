@@ -124,27 +124,51 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     touch-action: manipulation;
+    /* Enhanced mobile performance */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
   }
 
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Better mobile viewport handling */
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Enhanced mobile interactions */
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+  }
+
+  input,
+  textarea,
+  select {
+    user-select: text;
+    -webkit-user-select: text;
   }
 
   .mobile-card {
-    @apply bg-card border border-border rounded-2xl shadow-sm;
+    @apply bg-card border border-border rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md;
   }
 
   .mobile-button-primary {
-    @apply bg-primary text-primary-foreground rounded-xl px-6 py-3 font-medium;
+    @apply bg-primary text-primary-foreground rounded-xl px-6 py-3 font-medium transition-all duration-200 active:scale-95;
   }
 
   .mobile-button-secondary {
-    @apply bg-secondary text-secondary-foreground rounded-xl px-6 py-3 font-medium;
+    @apply bg-secondary text-secondary-foreground rounded-xl px-6 py-3 font-medium transition-all duration-200 active:scale-95;
   }
 
   .mobile-input {
-    @apply bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground;
+    @apply bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:ring-2 focus:ring-ring;
   }
 
   .safe-area-top {
@@ -153,6 +177,85 @@
 
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Smooth animations and transitions */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Loading states */
+  .loading-shimmer {
+    background: linear-gradient(90deg, #262833 25%, #3a3b47 50%, #262833 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Better scrolling */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #262833 transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #262833;
+    border-radius: 2px;
   }
 }
 
@@ -175,5 +278,47 @@
 
   .text-mobile-caption {
     @apply text-sm text-muted-foreground;
+  }
+
+  /* Performance utilities */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .touch-friendly {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Media queries for better responsive design */
+@media (max-width: 320px) {
+  .mobile-card {
+    @apply rounded-lg;
+  }
+
+  .mobile-button-primary,
+  .mobile-button-secondary {
+    @apply px-4 py-2 text-sm;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }
