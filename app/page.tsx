@@ -56,7 +56,7 @@ const featuredItems = [
 
 export default function HomePage() {
   return (
-    <MobileLayout title="Selly Socks" subtitle="Discover unique pieces with stories" showBack={false}>
+    <MobileLayout subtitle="Discover unique pieces with stories" showBack={false}>
       {/* Hero Section */}
       <div className="px-4 py-8 text-center">
         <div className="flex justify-center mb-4">
