@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
 
 // Mock user type for when Firebase isn't available
 interface MockUser {
@@ -197,210 +197,196 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID.trim() !== ""
   )
 
-  const signIn = async (email: string, password: string) => {
-    // Mock sign-in process - in production this would use Firebase authentication
+  const signIn = useCallback(async (email: string, password: string) => {
     console.log(`Signing in with email: ${email} and password: ${password}`)
     setUser(mockUser)
     setProfile(mockProfile)
-  }
+  }, [])
 
-  const signUp = async (email: string, password: string, displayName?: string) => {
-    // Mock sign-up process - in production this would use Firebase authentication
+  const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
     console.log(`Signing up with email: ${email}, password: ${password}, displayName: ${displayName}`)
     setUser(mockUser)
     setProfile(mockProfile)
-  }
+  }, [])
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    // Mock update profile process - in production this would update the user's profile in Firebase
+  const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
     console.log("Updating profile with:", updates)
-    setProfile({ ...profile, ...updates })
-  }
+    setProfile((prev) => (prev ? { ...prev, ...updates } : null))
+  }, [])
 
-  const logout = async () => {
-    // Mock logout process - in production this would use Firebase authentication
+  const logout = useCallback(async () => {
     console.log("Logging out")
     setUser(null)
     setProfile(null)
-  }
+  }, [])
 
-  const needsProfileSetup = () => {
-    // Determine if profile setup is needed based on profile completeness
+  const needsProfileSetup = useCallback(() => {
     if (!profile) return true
     return false
-  }
+  }, [profile])
 
-  const addToFavourites = async (itemId: string) => {
-    // Mock add to favourites process
+  const addToFavourites = useCallback(async (itemId: string) => {
     console.log(`Adding item ${itemId} to favourites`)
-    if (profile) {
-      setProfile({ ...profile, favourites: [...(profile.favourites || []), itemId] })
-    }
-  }
+    setProfile((prev) => (prev ? { ...prev, favourites: [...(prev.favourites || []), itemId] } : null))
+  }, [])
 
-  const removeFromFavourites = async (itemId: string) => {
-    // Mock remove from favourites process
+  const removeFromFavourites = useCallback(async (itemId: string) => {
     console.log(`Removing item ${itemId} from favourites`)
-    if (profile) {
-      setProfile({ ...profile, favourites: (profile.favourites || []).filter((id) => id !== itemId) })
-    }
-  }
+    setProfile((prev) => (prev ? { ...prev, favourites: (prev.favourites || []).filter((id) => id !== itemId) } : null))
+  }, [])
 
-  const isFavourited = (itemId: string) => {
-    // Check if item is in favourites
-    return profile?.favourites?.includes(itemId) || false
-  }
+  const isFavourited = useCallback(
+    (itemId: string) => {
+      return profile?.favourites?.includes(itemId) || false
+    },
+    [profile?.favourites],
+  )
 
-  const addCreatorToFavourites = async (creatorId: string) => {
-    // Mock add creator to favourites process
+  const addCreatorToFavourites = useCallback(async (creatorId: string) => {
     console.log(`Adding creator ${creatorId} to favourites`)
-    if (profile) {
-      setProfile({ ...profile, favouriteCreators: [...(profile.favouriteCreators || []), creatorId] })
-    }
-  }
+    setProfile((prev) => (prev ? { ...prev, favouriteCreators: [...(prev.favouriteCreators || []), creatorId] } : null))
+  }, [])
 
-  const removeCreatorFromFavourites = async (creatorId: string) => {
-    // Mock remove creator from favourites process
+  const removeCreatorFromFavourites = useCallback(async (creatorId: string) => {
     console.log(`Removing creator ${creatorId} from favourites`)
-    if (profile) {
-      setProfile({ ...profile, favouriteCreators: (profile.favouriteCreators || []).filter((id) => id !== creatorId) })
-    }
-  }
+    setProfile((prev) =>
+      prev ? { ...prev, favouriteCreators: (prev.favouriteCreators || []).filter((id) => id !== creatorId) } : null,
+    )
+  }, [])
 
-  const isCreatorFavourited = (creatorId: string) => {
-    // Check if creator is in favourites
-    return profile?.favouriteCreators?.includes(creatorId) || false
-  }
+  const isCreatorFavourited = useCallback(
+    (creatorId: string) => {
+      return profile?.favouriteCreators?.includes(creatorId) || false
+    },
+    [profile?.favouriteCreators],
+  )
 
-  const addToWishlist = async (itemId: string, priceAlertEnabled?: boolean, targetPrice?: number) => {
-    // Mock add to wishlist process
+  const addToWishlist = useCallback(async (itemId: string, priceAlertEnabled?: boolean, targetPrice?: number) => {
     console.log(
       `Adding item ${itemId} to wishlist with price alert enabled: ${priceAlertEnabled} and target price: ${targetPrice}`,
     )
-    if (profile) {
-      const newItem: WishlistItem = {
-        itemId,
-        addedAt: new Date(),
-        priceAlertEnabled: priceAlertEnabled || false,
-        targetPrice,
-      }
-      setProfile({ ...profile, wishlist: [...(profile.wishlist || []), newItem] })
+    const newItem: WishlistItem = {
+      itemId,
+      addedAt: new Date(),
+      priceAlertEnabled: priceAlertEnabled || false,
+      targetPrice,
     }
-  }
+    setProfile((prev) => (prev ? { ...prev, wishlist: [...(prev.wishlist || []), newItem] } : null))
+  }, [])
 
-  const removeFromWishlist = async (itemId: string) => {
-    // Mock remove from wishlist process
+  const removeFromWishlist = useCallback(async (itemId: string) => {
     console.log(`Removing item ${itemId} from wishlist`)
-    if (profile) {
-      setProfile({ ...profile, wishlist: (profile.wishlist || []).filter((item) => item.itemId !== itemId) })
-    }
-  }
+    setProfile((prev) =>
+      prev ? { ...prev, wishlist: (prev.wishlist || []).filter((item) => item.itemId !== itemId) } : null,
+    )
+  }, [])
 
-  const isInWishlist = (itemId: string) => {
-    // Check if item is in wishlist
-    return profile?.wishlist?.some((item) => item.itemId === itemId) || false
-  }
+  const isInWishlist = useCallback(
+    (itemId: string) => {
+      return profile?.wishlist?.some((item) => item.itemId === itemId) || false
+    },
+    [profile?.wishlist],
+  )
 
-  const updatePriceAlert = async (itemId: string, targetPrice: number) => {
-    // Mock update price alert process
+  const updatePriceAlert = useCallback(async (itemId: string, targetPrice: number) => {
     console.log(`Updating price alert for item ${itemId} with target price: ${targetPrice}`)
-    if (profile) {
-      const updatedWishlist = profile.wishlist?.map((item) => {
+    setProfile((prev) => {
+      if (!prev) return null
+      const updatedWishlist = prev.wishlist?.map((item) => {
         if (item.itemId === itemId) {
           return { ...item, targetPrice }
         }
         return item
       })
-      setProfile({ ...profile, wishlist: updatedWishlist })
-    }
-  }
+      return { ...prev, wishlist: updatedWishlist }
+    })
+  }, [])
 
-  const checkPriceAlerts = async () => {
-    // Mock check price alerts process
+  const checkPriceAlerts = useCallback(async () => {
     console.log("Checking price alerts")
-    if (profile) {
-      const updatedWishlist = profile.wishlist?.map((item) => {
+    setProfile((prev) => {
+      if (!prev) return null
+      const updatedWishlist = prev.wishlist?.map((item) => {
         if (item.priceAlertEnabled && item.targetPrice && item.currentPrice < item.targetPrice) {
           return { ...item, triggered: true }
         }
         return item
       })
-      setProfile({ ...profile, wishlist: updatedWishlist })
-    }
-  }
+      return { ...prev, wishlist: updatedWishlist }
+    })
+  }, [])
 
-  const addToRecentlyViewed = async (item: Omit<RecentlyViewedItem, "viewedAt">) => {
-    // Mock add to recently viewed process
+  const addToRecentlyViewed = useCallback(async (item: Omit<RecentlyViewedItem, "viewedAt">) => {
     console.log(`Adding item ${item.itemId} to recently viewed`)
-    if (profile) {
-      const newItem: RecentlyViewedItem = { ...item, viewedAt: new Date() }
-      setProfile({ ...profile, recentlyViewed: [newItem, ...(profile.recentlyViewed || [])] })
-    }
-  }
+    const newItem: RecentlyViewedItem = { ...item, viewedAt: new Date() }
+    setProfile((prev) => {
+      if (!prev) return null
+      const updatedRecentlyViewed = [newItem, ...(prev.recentlyViewed || [])].slice(0, 10)
+      return { ...prev, recentlyViewed: updatedRecentlyViewed }
+    })
+  }, [])
 
-  const getRecentlyViewed = () => {
-    // Get recently viewed items
+  const getRecentlyViewed = useCallback(() => {
     return profile?.recentlyViewed || []
-  }
+  }, [profile?.recentlyViewed])
 
-  const clearRecentlyViewed = async () => {
-    // Mock clear recently viewed process
+  const clearRecentlyViewed = useCallback(async () => {
     console.log("Clearing recently viewed items")
-    if (profile) {
-      setProfile({ ...profile, recentlyViewed: [] })
-    }
-  }
+    setProfile((prev) => (prev ? { ...prev, recentlyViewed: [] } : null))
+  }, [])
 
-  const requestVerification = async (type: string, data?: any) => {
-    if (!profile) throw new Error("No profile available")
+  const requestVerification = useCallback(
+    async (type: string, data?: any) => {
+      if (!profile) throw new Error("No profile available")
 
-    console.log(`Requesting ${type} verification with data:`, data)
+      console.log(`Requesting ${type} verification with data:`, data)
 
-    // Mock verification process - in production this would integrate with verification services
-    const updatedVerification = { ...profile.verification }
+      const updatedVerification = { ...profile.verification }
 
-    switch (type) {
-      case "phone":
-        updatedVerification.phone = {
-          verified: true,
-          verifiedAt: new Date(),
-          number: data?.phoneNumber || "+44 7*** *** ***",
-        }
-        break
-      case "instagram":
-        updatedVerification.socialMedia.instagram = {
-          verified: true,
-          verifiedAt: new Date(),
-          username: data?.username || "@user",
-        }
-        break
-      case "twitter":
-        updatedVerification.socialMedia.twitter = {
-          verified: true,
-          verifiedAt: new Date(),
-          username: data?.username || "@user",
-        }
-        break
-      case "facebook":
-        updatedVerification.socialMedia.facebook = {
-          verified: true,
-          verifiedAt: new Date(),
-          username: data?.username || "user",
-        }
-        break
-      case "identity":
-        updatedVerification.identity = {
-          verified: true,
-          verifiedAt: new Date(),
-          method: data?.method || "government_id",
-        }
-        break
-    }
+      switch (type) {
+        case "phone":
+          updatedVerification.phone = {
+            verified: true,
+            verifiedAt: new Date(),
+            number: data?.phoneNumber || "+44 7*** *** ***",
+          }
+          break
+        case "instagram":
+          updatedVerification.socialMedia.instagram = {
+            verified: true,
+            verifiedAt: new Date(),
+            username: data?.username || "@user",
+          }
+          break
+        case "twitter":
+          updatedVerification.socialMedia.twitter = {
+            verified: true,
+            verifiedAt: new Date(),
+            username: data?.username || "@user",
+          }
+          break
+        case "facebook":
+          updatedVerification.socialMedia.facebook = {
+            verified: true,
+            verifiedAt: new Date(),
+            username: data?.username || "user",
+          }
+          break
+        case "identity":
+          updatedVerification.identity = {
+            verified: true,
+            verifiedAt: new Date(),
+            method: data?.method || "government_id",
+          }
+          break
+      }
 
-    await updateProfile({ verification: updatedVerification })
-  }
+      await updateProfile({ verification: updatedVerification })
+    },
+    [profile, updateProfile],
+  )
 
-  const getVerificationLevel = () => {
+  const getVerificationLevel = useCallback(() => {
     if (!profile) return "none"
 
     const { verification } = profile
@@ -417,11 +403,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (verifiedCount <= 2) return "basic"
     if (verifiedCount <= 4) return "verified"
     return "premium"
-  }
+  }, [profile])
 
   useEffect(() => {
-    // For now, use mock user to demonstrate the UI
-    // In production, this would use Firebase authentication
     setTimeout(() => {
       setUser(mockUser)
       setProfile(mockProfile)
