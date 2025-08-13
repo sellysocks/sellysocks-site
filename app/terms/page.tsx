@@ -1,20 +1,22 @@
+import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-cream-50">
+    <MobileLayout>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-brown-900 mb-2">Terms of Service</h1>
-          <p className="text-brown-600">Last updated: January 15, 2024</p>
+          <h1 className="text-3xl font-serif font-bold mb-2">Terms of Service</h1>
+          <p className="text-muted-foreground">Last updated: January 15, 2024</p>
         </div>
 
+        {/* ... existing terms content ... */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Acceptance of Terms</CardTitle>
             </CardHeader>
-            <CardContent className="prose prose-brown max-w-none">
+            <CardContent className="prose prose-sm max-w-none">
               <p>
                 By accessing and using Selly Socks, you accept and agree to be bound by the terms and provision of this
                 agreement.
@@ -26,7 +28,7 @@ export default function TermsOfService() {
             <CardHeader>
               <CardTitle>Platform Rules</CardTitle>
             </CardHeader>
-            <CardContent className="prose prose-brown max-w-none">
+            <CardContent className="prose prose-sm max-w-none">
               <p>Users must comply with the following rules:</p>
               <ul>
                 <li>Only list items you personally own and have the right to sell</li>
@@ -42,7 +44,7 @@ export default function TermsOfService() {
             <CardHeader>
               <CardTitle>Fees and Payments</CardTitle>
             </CardHeader>
-            <CardContent className="prose prose-brown max-w-none">
+            <CardContent className="prose prose-sm max-w-none">
               <p>
                 Selly Socks charges a 10% platform fee on all successful transactions. This fee is automatically
                 deducted from the seller's payout.
@@ -58,7 +60,7 @@ export default function TermsOfService() {
             <CardHeader>
               <CardTitle>Prohibited Items</CardTitle>
             </CardHeader>
-            <CardContent className="prose prose-brown max-w-none">
+            <CardContent className="prose prose-sm max-w-none">
               <p>The following items are prohibited on our platform:</p>
               <ul>
                 <li>Counterfeit or replica items</li>
@@ -74,7 +76,7 @@ export default function TermsOfService() {
             <CardHeader>
               <CardTitle>Limitation of Liability</CardTitle>
             </CardHeader>
-            <CardContent className="prose prose-brown max-w-none">
+            <CardContent className="prose prose-sm max-w-none">
               <p>
                 Selly Socks acts as a platform connecting buyers and sellers. We are not responsible for the quality,
                 safety, or legality of items listed, the truth or accuracy of listings, or the ability of sellers to
@@ -88,9 +90,9 @@ export default function TermsOfService() {
               <CardTitle>Contact Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-brown-700">
+              <p className="text-muted-foreground">
                 For questions about these Terms of Service, contact us at{" "}
-                <a href="mailto:legal@sellysocks.com" className="text-brown-900 hover:underline">
+                <a href="mailto:legal@sellysocks.com" className="text-primary hover:underline">
                   legal@sellysocks.com
                 </a>
               </p>
@@ -98,6 +100,6 @@ export default function TermsOfService() {
           </Card>
         </div>
       </div>
-    </div>
+    </MobileLayout>
   )
 }

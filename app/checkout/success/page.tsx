@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { Navigation } from "@/components/navigation"
+import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,20 +39,17 @@ export default function CheckoutSuccessPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <MobileLayout>
         <div className="container mx-auto px-4 py-12 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Processing your order...</p>
         </div>
-      </div>
+      </MobileLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-
+    <MobileLayout>
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto text-center">
           {/* Success Icon */}
@@ -62,7 +59,7 @@ export default function CheckoutSuccessPage() {
             <p className="text-muted-foreground">Your order has been confirmed and the seller has been notified.</p>
           </div>
 
-          {/* Order Details */}
+          {/* ... existing order details and content ... */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Order Confirmation</CardTitle>
@@ -96,7 +93,7 @@ export default function CheckoutSuccessPage() {
             </CardContent>
           </Card>
 
-          {/* Next Steps */}
+          {/* ... existing next steps and action buttons ... */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>What happens next?</CardTitle>
@@ -140,7 +137,6 @@ export default function CheckoutSuccessPage() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild>
               <Link href="/orders">
@@ -162,7 +158,6 @@ export default function CheckoutSuccessPage() {
             </Button>
           </div>
 
-          {/* Support */}
           <div className="mt-12 p-4 bg-muted/50 rounded-lg">
             <p className="text-sm text-muted-foreground">
               Need help with your order?{" "}
@@ -173,6 +168,6 @@ export default function CheckoutSuccessPage() {
           </div>
         </div>
       </div>
-    </div>
+    </MobileLayout>
   )
 }

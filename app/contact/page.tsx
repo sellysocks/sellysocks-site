@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Navigation } from "@/components/navigation"
+import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -64,9 +64,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-
+    <MobileLayout>
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
@@ -231,6 +229,6 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
-    </div>
+    </MobileLayout>
   )
 }
