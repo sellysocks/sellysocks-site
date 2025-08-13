@@ -1,6 +1,7 @@
 "use client"
 
 import { MobileLayout } from "@/components/mobile/mobile-layout"
+import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -58,7 +59,9 @@ export default function HomePage() {
     <MobileLayout title="Selly Socks" subtitle="Discover unique pieces with stories" showBack={false}>
       {/* Hero Section */}
       <div className="px-4 py-8 text-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Smelly. Personal. Yours.</h1>
+        <div className="flex justify-center mb-4">
+          <Logo className="h-16 w-auto" />
+        </div>
         <p className="text-[#B4B6C2] mb-6 text-sm">
           The social marketplace where creators share their most intimate items with devoted fans.
         </p>
