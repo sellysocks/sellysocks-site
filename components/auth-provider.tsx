@@ -68,11 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Check if Firebase environment variables are configured
   const isFirebaseConfigured = !!(
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY.trim() !== "" &&
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN.trim() !== "" &&
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID.trim() !== ""
   )
 
   useEffect(() => {
@@ -86,37 +88,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    if (!isFirebaseConfigured) {
-      // Mock sign in for demo
-      setUser(mockUser)
-      setProfile(mockProfile)
-      return
+    console.log("Sign in attempt:", { email, isFirebaseConfigured })
+
+    // Mock sign in - create a user based on the email
+    const newUser = {
+      uid: `user-${Date.now()}`,
+      email,
+      displayName: email.split("@")[0],
     }
 
-    // TODO: Implement Firebase sign in when configured
-    throw new Error("Firebase authentication not yet implemented")
+    setUser(newUser)
+    setProfile({
+      ...mockProfile,
+      uid: newUser.uid,
+      email,
+      displayName: email.split("@")[0],
+    })
   }
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    if (!isFirebaseConfigured) {
-      // Mock sign up for demo
-      const newUser = {
-        uid: `user-${Date.now()}`,
-        email,
-        displayName: displayName || null,
-      }
-      setUser(newUser)
-      setProfile({
-        ...mockProfile,
-        uid: newUser.uid,
-        email,
-        displayName: displayName || "",
-      })
-      return
+    console.log("Sign up attempt:", { email, displayName, isFirebaseConfigured })
+
+    // Mock sign up - create a new user
+    const newUser = {
+      uid: `user-${Date.now()}`,
+      email,
+      displayName: displayName || email.split("@")[0],
     }
 
-    // TODO: Implement Firebase sign up when configured
-    throw new Error("Firebase authentication not yet implemented")
+    const newProfile = {
+      uid: newUser.uid,
+      email,
+      displayName: displayName || email.split("@")[0],
+      avatar: "/diverse-woman-avatar.png",
+      bio: "New to Selly Socks!",
+      role: "user" as const,
+      verifiedSeller: false,
+      stats: {
+        itemsSold: 0,
+        totalEarnings: 0,
+        rating: 0,
+        reviewCount: 0,
+      },
+      createdAt: new Date(),
+    }
+
+    setUser(newUser)
+    setProfile(newProfile)
+
+    console.log("Sign up successful:", newUser)
   }
 
   const logout = async () => {
