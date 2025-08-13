@@ -73,6 +73,15 @@ export default function ItemPage({ params }: { params: { id: string } }) {
     setCurrentImageIndex((prev) => (prev - 1 + item.images.length) % item.images.length)
   }
 
+  const getThreadId = (sellerId: string) => {
+    const threadMap: { [key: string]: string } = {
+      "emma-rose": "thread-emma",
+      "sophie-luxe": "thread-2",
+      "alex-chen": "thread-1",
+    }
+    return threadMap[sellerId] || "thread-1"
+  }
+
   return (
     <MobileLayout
       customHeader={
@@ -243,7 +252,7 @@ export default function ItemPage({ params }: { params: { id: string } }) {
 
         <div className="fixed bottom-16 left-0 right-0 bg-[#15161C] border-t border-[#262833] p-4 z-50">
           <div className="flex gap-3">
-            <Link href={`/messages/thread-${item.seller.id}`} className="flex-1">
+            <Link href={`/messages/${getThreadId(item.seller.id)}`} className="flex-1">
               <Button
                 variant="outline"
                 className="w-full border-[#262833] text-white hover:bg-[#262833] bg-transparent"
