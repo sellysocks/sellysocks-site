@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Navigation } from "@/components/navigation"
+import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -77,16 +77,15 @@ export default function SalesPage() {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-3xl font-serif font-bold mb-4">Sign In Required</h1>
-          <p className="text-muted-foreground mb-8">You need to be signed in to view your sales.</p>
-          <Button asChild>
+      <MobileLayout title="Sign In Required" showBack={false} showPublic={false} showSettings={false} showMenu={false}>
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-white mb-4">Sign In Required</h2>
+          <p className="text-[#B4B6C2] mb-6">You need to be signed in to view your sales.</p>
+          <Button asChild className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
             <Link href="/auth/signin">Sign In</Link>
           </Button>
         </div>
-      </div>
+      </MobileLayout>
     )
   }
 
@@ -97,49 +96,49 @@ export default function SalesPage() {
   })
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+    <MobileLayout title="My Sales" subtitle="Manage your listings and track sales">
+      <div className="px-4">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">My Sales</h1>
-            <p className="text-muted-foreground">Manage your listings and track your sales</p>
+            <h2 className="text-lg font-semibold text-white">Your Items</h2>
+            <p className="text-sm text-[#B4B6C2]">{mockItems.length} total items</p>
           </div>
-          <Button asChild>
+          <Button asChild size="sm" className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
             <Link href="/sell">
-              <Plus className="h-4 w-4 mr-2" />
-              List New Item
+              <Plus className="h-4 w-4 mr-1" />
+              List Item
             </Link>
           </Button>
         </div>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="items">My Items ({mockItems.length})</TabsTrigger>
-            <TabsTrigger value="orders">Sales History ({mockOrders.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-[#15161C] border border-[#262833]">
+            <TabsTrigger value="items" className="data-[state=active]:bg-[#FF4D8D] data-[state=active]:text-white">
+              My Items ({mockItems.length})
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="data-[state=active]:bg-[#FF4D8D] data-[state=active]:text-white">
+              Sales ({mockOrders.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="items" className="mt-6">
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search your items..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+            <div className="mb-4 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#B4B6C2] h-4 w-4" />
+                <Input
+                  placeholder="Search your items..."
+                  className="pl-10 bg-[#15161C] border-[#262833] text-white placeholder:text-[#B4B6C2]"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full bg-[#15161C] border-[#262833] text-white">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#15161C] border-[#262833]">
                   <SelectItem value="all">All Items</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="pending">Pending Review</SelectItem>
@@ -149,98 +148,104 @@ export default function SalesPage() {
               </Select>
             </div>
 
-            {/* Items Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Items List */}
+            <div className="space-y-3">
               {filteredItems.map((item) => (
-                <Card key={item.id} className="group hover:shadow-lg transition-shadow overflow-hidden">
-                  <div className="aspect-square relative overflow-hidden">
-                    <img
-                      src={item.images[0] || "/placeholder.svg"}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 left-2">
-                      <Badge
-                        variant={
-                          item.status === "active"
-                            ? "default"
-                            : item.status === "sold"
-                              ? "secondary"
-                              : item.status === "pending"
-                                ? "outline"
-                                : "destructive"
-                        }
-                      >
-                        {item.status === "active"
-                          ? "Live"
-                          : item.status === "sold"
-                            ? "Sold"
-                            : item.status === "pending"
-                              ? "Pending"
-                              : "Removed"}
-                      </Badge>
-                    </div>
-                    <div className="absolute top-2 right-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/item/${item.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Item
-                            </Link>
-                          </DropdownMenuItem>
-                          {item.status === "active" && (
-                            <DropdownMenuItem>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remove
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
+                <Card key={item.id} className="bg-[#15161C] border-[#262833]">
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium text-sm line-clamp-2">{item.title}</h3>
-                      <span className="font-bold text-primary">£{item.price}</span>
-                    </div>
-
-                    <div className="flex gap-1 mb-3 flex-wrap">
-                      <Badge variant="secondary" className="text-xs">
-                        Size {item.size}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {item.condition}
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{item.views} views</span>
-                      <span>{item.likes} likes</span>
-                      <span>Listed {new Date(item.createdAt).toLocaleDateString()}</span>
-                    </div>
-
-                    {item.status === "sold" && (
-                      <div className="mt-2 pt-2 border-t">
-                        <div className="text-xs text-green-600">
-                          Sold on {new Date(item.soldAt!).toLocaleDateString()} for £{item.soldPrice}
+                    <div className="flex items-start gap-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#262833] flex-shrink-0 relative">
+                        <img
+                          src={item.images[0] || "/placeholder.svg"}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-1 left-1">
+                          <Badge
+                            variant={
+                              item.status === "active"
+                                ? "default"
+                                : item.status === "sold"
+                                  ? "secondary"
+                                  : item.status === "pending"
+                                    ? "outline"
+                                    : "destructive"
+                            }
+                            className="text-xs px-1 py-0"
+                          >
+                            {item.status === "active"
+                              ? "Live"
+                              : item.status === "sold"
+                                ? "Sold"
+                                : item.status === "pending"
+                                  ? "Pending"
+                                  : "Removed"}
+                          </Badge>
                         </div>
                       </div>
-                    )}
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="font-medium text-white text-sm line-clamp-1">{item.title}</h3>
+                            <div className="flex gap-1 mt-1">
+                              <Badge variant="secondary" className="text-xs bg-[#262833] text-[#B4B6C2] border-0">
+                                Size {item.size}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs border-[#262833] text-[#B4B6C2]">
+                                {item.condition}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-[#FF4D8D] text-sm">£{item.price}</div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-8 h-8 p-0 border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-[#15161C] border-[#262833]">
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/item/${item.id}`}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Item
+                                  </Link>
+                                </DropdownMenuItem>
+                                {item.status === "active" && (
+                                  <DropdownMenuItem>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem className="text-red-400">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Remove
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs text-[#B4B6C2]">
+                          <span>{item.views} views</span>
+                          <span>{item.likes} likes</span>
+                          <span>Listed {new Date(item.createdAt).toLocaleDateString()}</span>
+                        </div>
+
+                        {item.status === "sold" && (
+                          <div className="mt-2 pt-2 border-t border-[#262833]">
+                            <div className="text-xs text-green-400">
+                              Sold on {new Date(item.soldAt!).toLocaleDateString()} for £{item.soldPrice}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -248,8 +253,8 @@ export default function SalesPage() {
 
             {filteredItems.length === 0 && (
               <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">No items found matching your criteria.</div>
-                <Button asChild>
+                <div className="text-[#B4B6C2] mb-4">No items found matching your criteria.</div>
+                <Button asChild className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
                   <Link href="/sell">List Your First Item</Link>
                 </Button>
               </div>
@@ -257,34 +262,36 @@ export default function SalesPage() {
           </TabsContent>
 
           <TabsContent value="orders" className="mt-6">
-            <div className="space-y-4">
+            <div className="space-y-3">
               {mockOrders.map((order) => (
-                <Card key={order.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                <Card key={order.id} className="bg-[#15161C] border-[#262833]">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-medium mb-1">{order.itemTitle}</h3>
-                        <p className="text-sm text-muted-foreground">Sold to {order.buyerName}</p>
+                        <h3 className="font-medium text-white text-sm mb-1">{order.itemTitle}</h3>
+                        <p className="text-xs text-[#B4B6C2]">Sold to {order.buyerName}</p>
                       </div>
-                      <Badge variant="secondary">Completed</Badge>
+                      <Badge variant="secondary" className="bg-[#262833] text-[#B4B6C2] border-0">
+                        Completed
+                      </Badge>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-muted-foreground">Sale Price:</span>
-                        <div className="font-medium">£{order.price}</div>
+                        <span className="text-[#B4B6C2]">Sale Price:</span>
+                        <div className="font-medium text-white">£{order.price}</div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Platform Fee:</span>
-                        <div className="font-medium">-£{order.platformFee}</div>
+                        <span className="text-[#B4B6C2]">Platform Fee:</span>
+                        <div className="font-medium text-white">-£{order.platformFee}</div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Your Earnings:</span>
-                        <div className="font-medium text-green-600">£{order.netEarnings}</div>
+                        <span className="text-[#B4B6C2]">Your Earnings:</span>
+                        <div className="font-medium text-green-400">£{order.netEarnings}</div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Order Date:</span>
-                        <div className="font-medium">{new Date(order.orderDate).toLocaleDateString()}</div>
+                        <span className="text-[#B4B6C2]">Order Date:</span>
+                        <div className="font-medium text-white">{new Date(order.orderDate).toLocaleDateString()}</div>
                       </div>
                     </div>
                   </CardContent>
@@ -293,8 +300,8 @@ export default function SalesPage() {
 
               {mockOrders.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="text-muted-foreground mb-4">No sales yet. Start by listing some items!</div>
-                  <Button asChild>
+                  <div className="text-[#B4B6C2] mb-4">No sales yet. Start by listing some items!</div>
+                  <Button asChild className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
                     <Link href="/sell">List Your First Item</Link>
                   </Button>
                 </div>
@@ -303,6 +310,6 @@ export default function SalesPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </MobileLayout>
   )
 }

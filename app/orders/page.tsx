@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Navigation } from "@/components/navigation"
+import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -63,16 +63,15 @@ export default function OrdersPage() {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-3xl font-serif font-bold mb-4">Sign In Required</h1>
-          <p className="text-muted-foreground mb-8">You need to be signed in to view your orders.</p>
-          <Button asChild>
+      <MobileLayout title="Sign In Required" showBack={false} showPublic={false} showSettings={false} showMenu={false}>
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-white mb-4">Sign In Required</h2>
+          <p className="text-[#B4B6C2] mb-6">You need to be signed in to view your orders.</p>
+          <Button asChild className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
             <Link href="/auth/signin">Sign In</Link>
           </Button>
         </div>
-      </div>
+      </MobileLayout>
     )
   }
 
@@ -115,150 +114,132 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <MobileLayout title="My Orders" subtitle="Track your purchases and manage orders">
+      {/* Filters */}
+      <div className="px-4 mb-6">
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#B4B6C2] h-4 w-4" />
+          <Input
+            placeholder="Search orders..."
+            className="pl-10 bg-[#15161C] border-[#262833] text-white placeholder:text-[#B4B6C2]"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">My Orders</h1>
-            <p className="text-muted-foreground">Track your purchases and manage your orders</p>
-          </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full bg-[#15161C] border-[#262833] text-white">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#15161C] border-[#262833]">
+            <SelectItem value="all">All Orders</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="shipped">Shipped</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-          {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search orders..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+      {/* Orders List */}
+      <div className="px-4 space-y-4">
+        {filteredOrders.map((order) => (
+          <Card key={order.id} className="bg-[#15161C] border-[#262833]">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                {/* Item Image */}
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#262833] flex-shrink-0">
+                  <img
+                    src={order.itemImage || "/placeholder.svg"}
+                    alt={order.itemTitle}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Orders</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Orders List */}
-          <div className="space-y-4">
-            {filteredOrders.map((order) => (
-              <Card key={order.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    {/* Item Image */}
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                      <img
-                        src={order.itemImage || "/placeholder.svg"}
-                        alt={order.itemTitle}
-                        className="w-full h-full object-cover"
-                      />
+                {/* Order Details */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-medium text-white text-sm line-clamp-1">{order.itemTitle}</h3>
+                      <p className="text-xs text-[#B4B6C2]">
+                        Sold by{" "}
+                        <Link href={`/seller/${order.sellerId}`} className="text-[#FF4D8D] hover:underline">
+                          {order.sellerName}
+                        </Link>
+                      </p>
                     </div>
-
-                    {/* Order Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-medium mb-1 line-clamp-1">{order.itemTitle}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Sold by{" "}
-                            <Link href={`/seller/${order.sellerId}`} className="text-primary hover:underline">
-                              {order.sellerName}
-                            </Link>
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-lg">£{order.price}</div>
-                          <Badge variant={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge>
-                        </div>
-                      </div>
-
-                      {/* Order Info */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
-                        <div>
-                          <span className="text-muted-foreground">Order Date:</span>
-                          <div>{new Date(order.orderDate).toLocaleDateString()}</div>
-                        </div>
-                        {order.deliveryDate && (
-                          <div>
-                            <span className="text-muted-foreground">Delivered:</span>
-                            <div>{new Date(order.deliveryDate).toLocaleDateString()}</div>
-                          </div>
-                        )}
-                        {order.estimatedDelivery && !order.deliveryDate && (
-                          <div>
-                            <span className="text-muted-foreground">Estimated Delivery:</span>
-                            <div>{new Date(order.estimatedDelivery).toLocaleDateString()}</div>
-                          </div>
-                        )}
-                        {order.trackingNumber && (
-                          <div>
-                            <span className="text-muted-foreground">Tracking:</span>
-                            <div className="font-mono text-xs">{order.trackingNumber}</div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2 flex-wrap">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/item/${order.itemId}`}>
-                            <Package className="h-4 w-4 mr-2" />
-                            View Item
-                          </Link>
-                        </Button>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/messages`}>
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Message Seller
-                          </Link>
-                        </Button>
-                        {order.canReview && (
-                          <Button variant="outline" size="sm">
-                            <Star className="h-4 w-4 mr-2" />
-                            Leave Review
-                          </Button>
-                        )}
-                        {order.status === "shipped" && order.trackingNumber && (
-                          <Button variant="outline" size="sm">
-                            Track Package
-                          </Button>
-                        )}
-                      </div>
+                    <div className="text-right">
+                      <div className="font-bold text-white text-sm">£{order.price}</div>
+                      <Badge variant={getStatusColor(order.status)} className="text-xs mt-1">
+                        {getStatusText(order.status)}
+                      </Badge>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
 
-          {filteredOrders.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== "all"
-                  ? "No orders found matching your criteria."
-                  : "You haven't made any purchases yet."}
+                  {/* Order Info */}
+                  <div className="text-xs text-[#B4B6C2] mb-3">
+                    <div>Ordered: {new Date(order.orderDate).toLocaleDateString()}</div>
+                    {order.deliveryDate && <div>Delivered: {new Date(order.deliveryDate).toLocaleDateString()}</div>}
+                    {order.estimatedDelivery && !order.deliveryDate && (
+                      <div>Est. Delivery: {new Date(order.estimatedDelivery).toLocaleDateString()}</div>
+                    )}
+                    {order.trackingNumber && <div className="font-mono">Tracking: {order.trackingNumber}</div>}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent text-xs h-7"
+                    >
+                      <Link href={`/item/${order.itemId}`}>
+                        <Package className="h-3 w-3 mr-1" />
+                        View Item
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent text-xs h-7"
+                    >
+                      <Link href={`/messages`}>
+                        <MessageCircle className="h-3 w-3 mr-1" />
+                        Message
+                      </Link>
+                    </Button>
+                    {order.canReview && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent text-xs h-7"
+                      >
+                        <Star className="h-3 w-3 mr-1" />
+                        Review
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <Button asChild>
-                <Link href="/">Start Shopping</Link>
-              </Button>
+            </CardContent>
+          </Card>
+        ))}
+
+        {filteredOrders.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-[#B4B6C2] mb-4">
+              {searchTerm || statusFilter !== "all"
+                ? "No orders found matching your criteria."
+                : "You haven't made any purchases yet."}
             </div>
-          )}
-        </div>
+            <Button asChild className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
+              <Link href="/">Start Shopping</Link>
+            </Button>
+          </div>
+        )}
       </div>
-    </div>
+    </MobileLayout>
   )
 }

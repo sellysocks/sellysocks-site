@@ -1,4 +1,6 @@
-import { Navigation } from "@/components/navigation"
+"use client"
+
+import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -109,132 +111,114 @@ const sellers = [
 
 export default function SellersPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-
-      {/* Header */}
-      <section className="py-12 px-4 text-center bg-gradient-to-b from-accent/20 to-background">
-        <div className="container mx-auto max-w-4xl">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary mb-4">Meet the Sellers</h1>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Discover the amazing creators behind each unique item. Every seller has their own story, style, and special
-            collection waiting for you.
-          </p>
-        </div>
-      </section>
-
+    <MobileLayout title="Meet the Sellers" subtitle="Discover amazing creators and their stories">
       {/* Search & Filters */}
-      <section className="py-6 px-4 border-b">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input placeholder="Search sellers..." className="pl-10" />
-              </div>
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              <Select>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Verified" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sellers</SelectItem>
-                  <SelectItem value="verified">Verified Only</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Sort" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="sales">Most Sales</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="items">Most Items</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      <div className="px-4 mb-6">
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#B4B6C2] h-4 w-4" />
+          <Input
+            placeholder="Search sellers..."
+            className="pl-10 bg-[#15161C] border-[#262833] text-white placeholder:text-[#B4B6C2]"
+          />
         </div>
-      </section>
+
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          <Select>
+            <SelectTrigger className="w-28 bg-[#15161C] border-[#262833] text-white">
+              <SelectValue placeholder="Verified" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#15161C] border-[#262833]">
+              <SelectItem value="all">All Sellers</SelectItem>
+              <SelectItem value="verified">Verified Only</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select>
+            <SelectTrigger className="w-28 bg-[#15161C] border-[#262833] text-white">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#15161C] border-[#262833]">
+              <SelectItem value="rating">Highest Rated</SelectItem>
+              <SelectItem value="sales">Most Sales</SelectItem>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="items">Most Items</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Sellers Grid */}
-      <section className="py-12 px-4">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {sellers.map((seller) => (
-              <Card key={seller.id} className="group hover:shadow-lg transition-shadow overflow-hidden">
-                <CardContent className="p-6">
-                  {/* Avatar & Basic Info */}
-                  <div className="text-center mb-4">
-                    <div className="relative inline-block mb-3">
-                      <img
-                        src={seller.avatar || "/placeholder.svg"}
-                        alt={seller.name}
-                        className="w-20 h-20 rounded-full mx-auto object-cover"
-                      />
-                      {seller.verified && (
-                        <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground px-1 text-xs">
-                          ✓
-                        </Badge>
-                      )}
-                    </div>
-                    <h3 className="font-serif text-xl font-bold mb-1">{seller.displayName}</h3>
-                    <div className="flex items-center justify-center gap-1 mb-2">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">{seller.stats.rating}</span>
-                      <span className="text-sm text-muted-foreground">({seller.stats.reviewCount})</span>
-                    </div>
-                  </div>
-
-                  {/* Bio */}
-                  <p className="text-sm text-muted-foreground text-center mb-4 line-clamp-3">{seller.bio}</p>
-
-                  {/* Tags */}
-                  <div className="flex gap-1 mb-4 flex-wrap justify-center">
-                    {seller.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        {tag}
+      <div className="px-4">
+        <div className="grid grid-cols-1 gap-4">
+          {sellers.map((seller) => (
+            <Card key={seller.id} className="bg-[#15161C] border-[#262833] overflow-hidden">
+              <CardContent className="p-4">
+                {/* Avatar & Basic Info */}
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="relative">
+                    <img
+                      src={seller.avatar || "/placeholder.svg"}
+                      alt={seller.name}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                    {seller.verified && (
+                      <Badge className="absolute -top-1 -right-1 bg-[#FF4D8D] text-white px-1 text-xs border-0">
+                        ✓
                       </Badge>
-                    ))}
+                    )}
                   </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-4 text-center">
-                    <div>
-                      <div className="font-bold text-lg">{seller.stats.itemsSold}</div>
-                      <div className="text-xs text-muted-foreground">Items Sold</div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-white text-lg mb-1">{seller.displayName}</h3>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium text-white">{seller.stats.rating}</span>
+                      <span className="text-sm text-[#B4B6C2]">({seller.stats.reviewCount})</span>
                     </div>
-                    <div>
-                      <div className="font-bold text-lg">{seller.itemCount}</div>
-                      <div className="text-xs text-muted-foreground">Available</div>
+                    <div className="flex items-center gap-4 text-sm text-[#B4B6C2]">
+                      <span>{seller.stats.itemsSold} sold</span>
+                      <span>{seller.itemCount} available</span>
                     </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent"
+                  >
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button asChild className="flex-1">
-                      <Link href={`/seller/${seller.id}`}>View Profile</Link>
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                {/* Bio */}
+                <p className="text-sm text-[#B4B6C2] mb-3 line-clamp-2">{seller.bio}</p>
 
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              Load More Sellers
-            </Button>
-          </div>
+                {/* Tags */}
+                <div className="flex gap-1 mb-3 flex-wrap">
+                  {seller.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs bg-[#262833] text-[#B4B6C2] border-0">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+
+                {/* Action */}
+                <Button asChild className="w-full bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
+                  <Link href={`/seller/${seller.id}`}>View Profile</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </section>
-    </div>
+
+        <div className="text-center mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[#262833] text-[#B4B6C2] hover:bg-[#15161C] bg-transparent"
+          >
+            Load More Sellers
+          </Button>
+        </div>
+      </div>
+    </MobileLayout>
   )
 }

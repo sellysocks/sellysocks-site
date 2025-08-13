@@ -3,15 +3,12 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Navigation } from "@/components/navigation"
+import { MobileLayout } from "@/components/mobile/mobile-layout"
+import { SectionCard } from "@/components/mobile/section-card"
+import { FormField } from "@/components/mobile/form-field"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { Camera, Star, Award, TrendingUp, Package } from "lucide-react"
@@ -33,16 +30,15 @@ export default function AccountPage() {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-3xl font-serif font-bold mb-4">Sign In Required</h1>
-          <p className="text-muted-foreground mb-8">You need to be signed in to access your account.</p>
-          <Button asChild>
+      <MobileLayout title="Sign In Required" showBack={false} showPublic={false} showSettings={false} showMenu={false}>
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-white mb-4">Sign In Required</h2>
+          <p className="text-[#B4B6C2] mb-6">You need to be signed in to access your account.</p>
+          <Button asChild className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
             <Link href="/auth/signin">Sign In</Link>
           </Button>
         </div>
-      </div>
+      </MobileLayout>
     )
   }
 
@@ -68,227 +64,145 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <MobileLayout title="Account" subtitle="Manage your profile and settings">
+      {/* Profile Picture */}
+      <SectionCard title="Profile Picture">
+        <div className="text-center">
+          <div className="relative inline-block mb-4">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.displayName} />
+              <AvatarFallback className="text-xl bg-[#262833] text-white">
+                {profile.displayName?.[0] || profile.email?.[0] || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <Button
+              size="sm"
+              className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0 bg-[#FF4D8D] hover:bg-[#FF4D8D]/90"
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="font-medium text-white">{profile.displayName}</span>
+            {profile.verifiedSeller && (
+              <Badge className="bg-[#FF4D8D] text-white border-0">
+                <Award className="h-3 w-3 mr-1" />
+                Verified
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-[#B4B6C2]">Member since {new Date(profile.createdAt).toLocaleDateString()}</p>
+        </div>
+      </SectionCard>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">Account Settings</h1>
-            <p className="text-muted-foreground">Manage your profile and account preferences</p>
+      {/* Profile Information */}
+      <SectionCard title="Profile Information">
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <FormField
+            label="Display Name"
+            value={profileData.displayName}
+            onChange={(value) => setProfileData({ ...profileData, displayName: value })}
+            placeholder="Your display name"
+          />
+
+          <FormField
+            label="Bio"
+            value={profileData.bio}
+            onChange={(value) => setProfileData({ ...profileData, bio: value })}
+            placeholder="Tell people about yourself and what makes your items special..."
+            multiline
+            rows={4}
+          />
+
+          <FormField
+            label="Location"
+            value={profileData.location}
+            onChange={(value) => setProfileData({ ...profileData, location: value })}
+            placeholder="City, Country"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              label="Instagram"
+              value={profileData.instagram}
+              onChange={(value) => setProfileData({ ...profileData, instagram: value })}
+              placeholder="@username"
+            />
+            <FormField
+              label="Twitter/X"
+              value={profileData.twitter}
+              onChange={(value) => setProfileData({ ...profileData, twitter: value })}
+              placeholder="@username"
+            />
           </div>
 
-          <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="stats">Statistics</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
+          <Button type="submit" disabled={loading} className="w-full bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </form>
+      </SectionCard>
 
-            <TabsContent value="profile" className="mt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Profile Picture */}
-                <div className="lg:col-span-1">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Profile Picture</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                      <div className="relative inline-block mb-4">
-                        <Avatar className="h-32 w-32">
-                          <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.displayName} />
-                          <AvatarFallback className="text-2xl">
-                            {profile.displayName?.[0] || profile.email?.[0] || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <Button size="sm" className="absolute bottom-0 right-0 rounded-full">
-                          <Camera className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <span className="font-medium">{profile.displayName}</span>
-                        {profile.verifiedSeller && (
-                          <Badge className="bg-primary text-primary-foreground">
-                            <Award className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Member since {new Date(profile.createdAt).toLocaleDateString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Profile Form */}
-                <div className="lg:col-span-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Profile Information</CardTitle>
-                      <CardDescription>Update your public profile information</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleSaveProfile} className="space-y-4">
-                        <div>
-                          <Label htmlFor="displayName">Display Name</Label>
-                          <Input
-                            id="displayName"
-                            value={profileData.displayName}
-                            onChange={(e) => setProfileData({ ...profileData, displayName: e.target.value })}
-                            placeholder="Your display name"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="bio">Bio</Label>
-                          <Textarea
-                            id="bio"
-                            value={profileData.bio}
-                            onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                            placeholder="Tell people about yourself and what makes your items special..."
-                            rows={4}
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="location">Location</Label>
-                          <Input
-                            id="location"
-                            value={profileData.location}
-                            onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
-                            placeholder="City, Country"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="instagram">Instagram</Label>
-                            <Input
-                              id="instagram"
-                              value={profileData.instagram}
-                              onChange={(e) => setProfileData({ ...profileData, instagram: e.target.value })}
-                              placeholder="@username"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="twitter">Twitter/X</Label>
-                            <Input
-                              id="twitter"
-                              value={profileData.twitter}
-                              onChange={(e) => setProfileData({ ...profileData, twitter: e.target.value })}
-                              placeholder="@username"
-                            />
-                          </div>
-                        </div>
-
-                        <Button type="submit" disabled={loading}>
-                          {loading ? "Saving..." : "Save Changes"}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="stats" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <Package className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <div className="text-2xl font-bold">{profile.stats.itemsSold}</div>
-                    <div className="text-sm text-muted-foreground">Items Sold</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                    <div className="text-2xl font-bold">£{profile.stats.totalEarnings}</div>
-                    <div className="text-sm text-muted-foreground">Total Earnings</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <Star className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-                    <div className="text-2xl font-bold">{profile.stats.rating}</div>
-                    <div className="text-sm text-muted-foreground">Average Rating</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <Award className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                    <div className="text-2xl font-bold">{profile.stats.reviewCount}</div>
-                    <div className="text-sm text-muted-foreground">Reviews</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance Overview</CardTitle>
-                  <CardDescription>Your selling performance over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Performance charts will be available once you have more sales data.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="settings" className="mt-6">
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Account Settings</CardTitle>
-                    <CardDescription>Manage your account preferences and security</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label>Email Address</Label>
-                      <Input value={profile.email} disabled className="bg-muted" />
-                      <p className="text-xs text-muted-foreground mt-1">Contact support to change your email address</p>
-                    </div>
-
-                    <div>
-                      <Label>Account Type</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
-                          {profile.role === "admin" ? "Administrator" : "User"}
-                        </Badge>
-                        {profile.verifiedSeller && (
-                          <Badge className="bg-primary text-primary-foreground">Verified Seller</Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t">
-                      <Button variant="outline">Change Password</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-destructive/20">
-                  <CardHeader>
-                    <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                    <CardDescription>Irreversible account actions</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="destructive" onClick={() => logout()}>
-                      Sign Out
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+      {/* Statistics */}
+      <SectionCard title="Your Statistics">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center">
+            <Package className="h-6 w-6 mx-auto mb-2 text-[#FF4D8D]" />
+            <div className="text-lg font-bold text-white">{profile.stats.itemsSold}</div>
+            <div className="text-xs text-[#B4B6C2]">Items Sold</div>
+          </div>
+          <div className="text-center">
+            <TrendingUp className="h-6 w-6 mx-auto mb-2 text-green-500" />
+            <div className="text-lg font-bold text-white">£{profile.stats.totalEarnings}</div>
+            <div className="text-xs text-[#B4B6C2]">Total Earnings</div>
+          </div>
+          <div className="text-center">
+            <Star className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
+            <div className="text-lg font-bold text-white">{profile.stats.rating}</div>
+            <div className="text-xs text-[#B4B6C2]">Average Rating</div>
+          </div>
+          <div className="text-center">
+            <Award className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+            <div className="text-lg font-bold text-white">{profile.stats.reviewCount}</div>
+            <div className="text-xs text-[#B4B6C2]">Reviews</div>
+          </div>
         </div>
-      </div>
-    </div>
+      </SectionCard>
+
+      {/* Account Settings */}
+      <SectionCard title="Account Settings">
+        <div className="space-y-4">
+          <FormField label="Email Address" value={profile.email} disabled placeholder="Email address" />
+          <p className="text-xs text-[#B4B6C2]">Contact support to change your email address</p>
+
+          <div>
+            <label className="text-sm font-medium text-white mb-2 block">Account Type</label>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-[#262833] text-[#B4B6C2] border-0">
+                {profile.role === "admin" ? "Administrator" : "User"}
+              </Badge>
+              {profile.verifiedSeller && <Badge className="bg-[#FF4D8D] text-white border-0">Verified Seller</Badge>}
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent"
+          >
+            Change Password
+          </Button>
+        </div>
+      </SectionCard>
+
+      {/* Danger Zone */}
+      <SectionCard title="Danger Zone">
+        <Button
+          variant="outline"
+          onClick={() => logout()}
+          className="w-full border-red-600 text-red-400 hover:bg-red-600/10 bg-transparent"
+        >
+          Sign Out
+        </Button>
+      </SectionCard>
+    </MobileLayout>
   )
 }
