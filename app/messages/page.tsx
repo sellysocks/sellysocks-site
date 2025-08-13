@@ -6,47 +6,12 @@ import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
-// Mock conversation data
-const mockConversations = [
-  {
-    id: "thread-1",
-    participant: {
-      name: "Emma Rose",
-      avatar: "/confident-short-hair-woman.png",
-    },
-    listingTitle: "Cozy Cotton Ankle Socks",
-    lastMessage: "Hi! I'm interested in your socks. Are they still available?",
-    timestamp: "2m ago",
-    unread: true,
-  },
-  {
-    id: "thread-2",
-    participant: {
-      name: "Sophie Chen",
-      avatar: "/curly-haired-woman.png",
-    },
-    listingTitle: "Silk Designer Stockings",
-    lastMessage: "Perfect! I'll ship them out tomorrow morning with tracking.",
-    timestamp: "1h ago",
-    unread: false,
-  },
-  {
-    id: "thread-3",
-    participant: {
-      name: "Mia Taylor",
-      avatar: "/diverse-woman-avatar.png",
-    },
-    listingTitle: "Athletic Running Socks",
-    lastMessage: "Thank you so much! They arrived and they're perfect",
-    timestamp: "3h ago",
-    unread: true,
-  },
-]
+import { useConversations } from "@/lib/messaging-hooks"
 
 export default function MessagesPage() {
   const { user } = useAuth()
   const router = useRouter()
+  const { conversations, loading, error } = useConversations()
 
   if (!user) {
     return (
@@ -62,59 +27,104 @@ export default function MessagesPage() {
     )
   }
 
+  if (loading) {
+    return (
+      <MobileLayout title="Messages" subtitle="Chat with buyers and sellers">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF4D8D]"></div>
+        </div>
+      </MobileLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <MobileLayout title="Messages" subtitle="Chat with buyers and sellers">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-semibold text-white mb-2">Failed to load messages</h3>
+          <p className="text-[#B4B6C2] mb-6 text-sm">{error}</p>
+          <Button onClick={() => window.location.reload()} className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
+            Try Again
+          </Button>
+        </div>
+      </MobileLayout>
+    )
+  }
+
   const handleConversationTap = (threadId: string) => {
     router.push(`/messages/${threadId}`)
+  }
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffInMinutes = (now.getTime() - date.getTime()) / (1000 * 60)
+
+    if (diffInMinutes < 1) return "now"
+    if (diffInMinutes < 60) return `${Math.floor(diffInMinutes)}m ago`
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
+    return date.toLocaleDateString([], { month: "short", day: "numeric" })
   }
 
   return (
     <MobileLayout title="Messages" subtitle="Chat with buyers and sellers">
       <div className="space-y-0">
-        {mockConversations.map((conversation, index) => (
-          <div key={conversation.id}>
-            <button
-              onClick={() => handleConversationTap(conversation.id)}
-              className="w-full p-4 flex items-center space-x-3 hover:bg-[#15161C] active:bg-[#262833] transition-colors text-left"
-            >
-              {/* Avatar */}
-              <Avatar className="h-10 w-10 flex-shrink-0">
-                <AvatarImage
-                  src={conversation.participant.avatar || "/placeholder.svg"}
-                  alt={conversation.participant.name}
-                />
-                <AvatarFallback className="bg-[#262833] text-white text-sm">
-                  {conversation.participant.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
+        {conversations.map((conversation: any, index: number) => {
+          const otherParticipant = conversation.participants.find((p: any) => p.id !== "current-user")
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                {/* Name */}
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-semibold text-white truncate">{conversation.participant.name}</h3>
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <span className="text-xs text-[#B4B6C2]">{conversation.timestamp}</span>
-                    {conversation.unread && <div className="w-2 h-2 bg-[#FF4D8D] rounded-full" />}
+          return (
+            <div key={conversation.id}>
+              <button
+                onClick={() => handleConversationTap(conversation.id)}
+                className="w-full p-4 flex items-center space-x-3 hover:bg-[#15161C] active:bg-[#262833] transition-colors text-left"
+              >
+                {/* Avatar */}
+                <Avatar className="h-10 w-10 flex-shrink-0">
+                  <AvatarImage
+                    src={otherParticipant?.avatar || "/placeholder.svg"}
+                    alt={otherParticipant?.name || "User"}
+                  />
+                  <AvatarFallback className="bg-[#262833] text-white text-sm">
+                    {otherParticipant?.name
+                      ?.split(" ")
+                      .map((n: string) => n[0])
+                      .join("") || "U"}
+                  </AvatarFallback>
+                </Avatar>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  {/* Name */}
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-white truncate">{otherParticipant?.name || "Unknown User"}</h3>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <span className="text-xs text-[#B4B6C2]">
+                        {conversation.lastMessage ? formatTimestamp(conversation.lastMessage.timestamp) : ""}
+                      </span>
+                      {conversation.unreadCount > 0 && <div className="w-2 h-2 bg-[#FF4D8D] rounded-full" />}
+                    </div>
                   </div>
+
+                  {/* Listing context */}
+                  {conversation.itemContext && (
+                    <p className="text-sm text-[#FF4D8D] mb-1 truncate">Re: {conversation.itemContext.title}</p>
+                  )}
+
+                  {/* Last message */}
+                  <p className="text-sm text-[#B4B6C2] truncate">
+                    {conversation.lastMessage?.text || "No messages yet"}
+                  </p>
                 </div>
+              </button>
 
-                {/* Listing context */}
-                <p className="text-sm text-[#FF4D8D] mb-1 truncate">Re: {conversation.listingTitle}</p>
-
-                {/* Last message */}
-                <p className="text-sm text-[#B4B6C2] truncate">{conversation.lastMessage}</p>
-              </div>
-            </button>
-
-            {/* Divider (except for last item) */}
-            {index < mockConversations.length - 1 && <div className="border-b border-[#262833] ml-16" />}
-          </div>
-        ))}
+              {/* Divider (except for last item) */}
+              {index < conversations.length - 1 && <div className="border-b border-[#262833] ml-16" />}
+            </div>
+          )
+        })}
 
         {/* Empty state if no conversations */}
-        {mockConversations.length === 0 && (
+        {conversations.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-[#15161C] rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-[#B4B6C2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

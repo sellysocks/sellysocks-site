@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-import { Send, ImageIcon, MoreVertical, Star, Heart } from "lucide-react"
+import { Send, ImageIcon, MoreVertical, Star, Heart, Wifi, WifiOff } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,231 +21,8 @@ import { MobileLayout } from "@/components/mobile/mobile-layout"
 import { TipModal } from "@/components/mobile/tip-modal"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-
-// Mock conversation data
-const mockConversations = {
-  "thread-1": {
-    id: "thread-1",
-    participants: [
-      {
-        id: "current-user",
-        name: "You",
-        avatar: "/placeholder.svg",
-      },
-      {
-        id: "emma-rose",
-        name: "Emma Rose",
-        avatar: "/diverse-woman-avatar.png",
-        verified: true,
-        rating: 4.9,
-        responseTime: "Usually responds within 2 hours",
-      },
-    ],
-    itemContext: {
-      id: "1",
-      title: "Cozy Cotton Socks",
-      image: "/cozy-cotton-socks.png",
-      price: 25,
-      status: "active",
-    },
-    messages: [
-      {
-        id: "msg-1",
-        senderId: "current-user",
-        text: "Hi! I'm interested in your cozy cotton socks. Are they still available?",
-        timestamp: "2024-01-25T10:30:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-2",
-        senderId: "emma-rose",
-        text: "Hi there! Yes, they're still available. They're one of my favorites - I wore them during my most intense workout sessions. They're super soft and have absorbed so much energy from my training!",
-        timestamp: "2024-01-25T10:45:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-3",
-        senderId: "current-user",
-        text: "That sounds perfect! I love the personal touch. Could you tell me more about the material and how they feel?",
-        timestamp: "2024-01-25T11:00:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-4",
-        senderId: "emma-rose",
-        text: "They're 100% cotton, super breathable and soft. After all my workouts, they've developed this amazing worn-in feel that's just perfect. I always get compliments on how comfortable they look!",
-        timestamp: "2024-01-25T11:15:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-5",
-        senderId: "emma-rose",
-        imageUrl: "/cotton-socks-detail.png",
-        text: "Here's a close-up of the texture - you can see how soft they've become!",
-        timestamp: "2024-01-25T11:16:00Z",
-        status: "delivered",
-      },
-    ],
-  },
-  "thread-emma": {
-    id: "thread-emma",
-    participants: [
-      {
-        id: "current-user",
-        name: "You",
-        avatar: "/placeholder.svg",
-      },
-      {
-        id: "emma-rose",
-        name: "Emma Rose",
-        avatar: "/diverse-woman-avatar.png",
-        verified: true,
-        rating: 4.9,
-        responseTime: "Usually responds within 2 hours",
-      },
-    ],
-    itemContext: {
-      id: "2",
-      title: "Silk Stockings",
-      image: "/silk-stockings.png",
-      price: 45,
-      status: "active",
-    },
-    messages: [
-      {
-        id: "msg-1",
-        senderId: "current-user",
-        text: "Hi Emma! I saw your silk stockings listing. They look amazing!",
-        timestamp: "2024-01-25T14:30:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-2",
-        senderId: "emma-rose",
-        text: "Thank you! These are some of my favorites. The silk is so luxurious and they have such a beautiful sheen. I've worn them to so many special occasions!",
-        timestamp: "2024-01-25T14:45:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-3",
-        senderId: "current-user",
-        text: "They sound perfect for what I'm looking for. What size are they?",
-        timestamp: "2024-01-25T15:00:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-4",
-        senderId: "emma-rose",
-        text: "They're size medium and fit beautifully. The silk has this amazing stretch that makes them so comfortable to wear. Would you like to see more photos?",
-        timestamp: "2024-01-25T15:15:00Z",
-        status: "delivered",
-      },
-    ],
-  },
-  "thread-emmarose": {
-    id: "thread-emmarose",
-    participants: [
-      {
-        id: "current-user",
-        name: "You",
-        avatar: "/placeholder.svg",
-      },
-      {
-        id: "emma-rose",
-        name: "Emma Rose",
-        avatar: "/diverse-woman-avatar.png",
-        verified: true,
-        rating: 4.9,
-        responseTime: "Usually responds within 2 hours",
-      },
-    ],
-    itemContext: {
-      id: "2",
-      title: "Silk Stockings",
-      image: "/silk-stockings.png",
-      price: 45,
-      status: "active",
-    },
-    messages: [
-      {
-        id: "msg-1",
-        senderId: "current-user",
-        text: "Hi Emma! I'm interested in learning more about your items.",
-        timestamp: "2024-01-25T16:30:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-2",
-        senderId: "emma-rose",
-        text: "Hello! Thank you for reaching out. I'd be happy to tell you about my collection. What are you looking for specifically?",
-        timestamp: "2024-01-25T16:45:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-3",
-        senderId: "current-user",
-        text: "I saw your profile and was impressed by your ratings. Do you have any new items coming soon?",
-        timestamp: "2024-01-25T17:00:00Z",
-        status: "delivered",
-      },
-    ],
-  },
-  "thread-2": {
-    id: "thread-2",
-    participants: [
-      {
-        id: "current-user",
-        name: "You",
-        avatar: "/placeholder.svg",
-      },
-      {
-        id: "sophie-luxe",
-        name: "Sophie Luxe",
-        avatar: "/woman-avatar-3.png",
-        verified: true,
-        rating: 4.8,
-        responseTime: "Usually responds within 1 hour",
-      },
-    ],
-    itemContext: {
-      id: "3",
-      title: "Designer Silk Stockings",
-      image: "/silk-stockings-detail.png",
-      price: 85,
-      status: "active",
-    },
-    messages: [
-      {
-        id: "msg-1",
-        senderId: "current-user",
-        text: "Hi Sophie! I'm interested in your designer silk stockings. They look absolutely stunning!",
-        timestamp: "2024-01-25T18:30:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-2",
-        senderId: "sophie-luxe",
-        text: "Thank you so much! These are from my premium collection - genuine Italian silk with hand-finished seams. They're incredibly luxurious and have this beautiful lustrous finish.",
-        timestamp: "2024-01-25T18:45:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-3",
-        senderId: "current-user",
-        text: "They sound perfect for a special occasion I have coming up. What's the condition like?",
-        timestamp: "2024-01-25T19:00:00Z",
-        status: "read",
-      },
-      {
-        id: "msg-4",
-        senderId: "sophie-luxe",
-        text: "They're in excellent condition - I've only worn them a few times to exclusive events. The silk still has that gorgeous sheen and the elasticity is perfect. They're truly a collector's piece!",
-        timestamp: "2024-01-25T19:15:00Z",
-        status: "delivered",
-      },
-    ],
-  },
-}
+import { useMessages } from "@/lib/messaging-hooks"
+import { messagingClient } from "@/lib/messaging"
 
 interface ChatPageProps {
   params: {
@@ -259,17 +36,18 @@ export default function ChatPage({ params }: ChatPageProps) {
   const [message, setMessage] = useState("")
   const [sending, setSending] = useState(false)
   const [showTipModal, setShowTipModal] = useState(false)
-  const [messages, setMessages] = useState<(typeof mockConversations)[keyof typeof mockConversations]["messages"]>([])
+  const { messages, conversation, loading, error, connected, sendMessage } = useMessages(params.threadId)
+  const [connectionStatus, setConnectionStatus] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const conversation = mockConversations[params.threadId as keyof typeof mockConversations]
-
   useEffect(() => {
-    if (conversation) {
-      setMessages(conversation.messages)
-    }
-  }, [conversation])
+    const unsubscribe = messagingClient.onConnectionChange((isConnected) => {
+      setConnectionStatus(isConnected)
+    })
+
+    return unsubscribe
+  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -291,34 +69,33 @@ export default function ChatPage({ params }: ChatPageProps) {
     )
   }
 
-  if (!conversation) {
+  if (loading) {
+    return (
+      <MobileLayout title="Messages" showBack backHref="/messages">
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading conversation...</p>
+          </div>
+        </div>
+      </MobileLayout>
+    )
+  }
+
+  if (error || !conversation) {
     notFound()
   }
 
-  const otherParticipant = conversation.participants.find((p) => p.id !== "current-user")!
+  const otherParticipant = conversation.participants.find((p: any) => p.id !== "current-user")!
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim()) return
+    if (!message.trim() || sending) return
 
     setSending(true)
     try {
-      const newMessage = {
-        id: `msg-${Date.now()}`,
-        senderId: "current-user",
-        text: message.trim(),
-        timestamp: new Date().toISOString(),
-        status: "sent" as const,
-      }
-
-      setMessages((prev) => [...prev, newMessage])
+      await sendMessage("current-user", message.trim())
       setMessage("")
-
-      setTimeout(() => {
-        setMessages((prev) =>
-          prev.map((msg) => (msg.id === newMessage.id ? { ...msg, status: "delivered" as const } : msg)),
-        )
-      }, 1000)
 
       toast({
         title: "Message sent",
@@ -335,13 +112,25 @@ export default function ChatPage({ params }: ChatPageProps) {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      toast({
-        title: "Image uploaded",
-        description: "Your image has been sent.",
-      })
+      try {
+        // In a real app, you'd upload the image to a storage service first
+        const imageUrl = "/placeholder.svg" // Placeholder for uploaded image
+        await sendMessage("current-user", "Shared an image", imageUrl)
+
+        toast({
+          title: "Image uploaded",
+          description: "Your image has been sent.",
+        })
+      } catch (error) {
+        toast({
+          title: "Failed to upload image",
+          description: "Please try again.",
+          variant: "destructive",
+        })
+      }
     }
   }
 
@@ -372,10 +161,16 @@ export default function ChatPage({ params }: ChatPageProps) {
                 Verified
               </Badge>
             )}
+            {connectionStatus ? (
+              <Wifi className="h-3 w-3 text-green-500" />
+            ) : (
+              <WifiOff className="h-3 w-3 text-red-500" />
+            )}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             <span>{otherParticipant.rating}</span>
+            <span className="ml-2">{connectionStatus ? "Connected" : "Connecting..."}</span>
           </div>
         </div>
       </div>
@@ -407,6 +202,12 @@ export default function ChatPage({ params }: ChatPageProps) {
 
   return (
     <MobileLayout showBack backHref="/messages" customHeader={customHeader} className="flex flex-col h-screen">
+      {!connectionStatus && (
+        <div className="bg-yellow-100 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
+          <p className="text-xs text-yellow-800 dark:text-yellow-200 text-center">Reconnecting to live chat...</p>
+        </div>
+      )}
+
       <div className="p-4 border-b">
         <Card>
           <CardContent className="p-3">
@@ -440,9 +241,9 @@ export default function ChatPage({ params }: ChatPageProps) {
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
-          {messages.map((msg) => {
+          {messages.map((msg: any) => {
             const isCurrentUser = msg.senderId === "current-user"
-            const sender = conversation.participants.find((p) => p.id === msg.senderId)!
+            const sender = conversation.participants.find((p: any) => p.id === msg.senderId)!
 
             return (
               <div key={msg.id} className={`flex gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}>
@@ -497,6 +298,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             className="flex-shrink-0"
+            disabled={!connectionStatus}
           >
             <ImageIcon className="h-4 w-4" />
           </Button>
@@ -515,13 +317,13 @@ export default function ChatPage({ params }: ChatPageProps) {
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message..."
-              disabled={sending}
+              placeholder={connectionStatus ? "Type your message..." : "Connecting..."}
+              disabled={sending || !connectionStatus}
               className="resize-none"
             />
           </div>
 
-          <Button type="submit" disabled={sending || !message.trim()} className="flex-shrink-0">
+          <Button type="submit" disabled={sending || !message.trim() || !connectionStatus} className="flex-shrink-0">
             <Send className="h-4 w-4" />
           </Button>
         </form>
