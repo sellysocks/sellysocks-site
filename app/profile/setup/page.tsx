@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { MobileLayout } from "@/components/mobile/mobile-layout"
+import { ProfilePictureUploader } from "@/components/mobile/profile-picture-uploader"
 
 export default function ProfileSetupPage() {
   const { profile, updateProfile } = useAuth()
@@ -20,6 +21,7 @@ export default function ProfileSetupPage() {
   const [displayName, setDisplayName] = useState(profile?.displayName || "")
   const [handle, setHandle] = useState("")
   const [bio, setBio] = useState(profile?.bio || "")
+  const [profilePicture, setProfilePicture] = useState<string | null>(profile?.avatar || null)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,11 +48,11 @@ export default function ProfileSetupPage() {
     setLoading(true)
 
     try {
-      // Update profile with new information
       await updateProfile({
         displayName: displayName.trim(),
         handle: handle.trim().toLowerCase(),
         bio: bio.trim(),
+        avatar: profilePicture,
       })
 
       toast({
@@ -79,7 +81,11 @@ export default function ProfileSetupPage() {
           <p className="text-muted-foreground">Let's set up your profile to get started</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex justify-center">
+            <ProfilePictureUploader currentImage={profilePicture} onImageChange={setProfilePicture} size="lg" />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="displayName" className="text-white">
               Display Name *

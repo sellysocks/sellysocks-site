@@ -137,15 +137,15 @@ export default function ProfilePage() {
           {/* Top Profile Block */}
           <div className="text-center space-y-4">
             {/* Avatar */}
-            <div className="w-20 h-20 bg-accent/20 rounded-full mx-auto flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto">
               {profile.avatar ? (
                 <img
                   src={profile.avatar || "/placeholder.svg"}
                   alt={profile.displayName}
-                  className="w-20 h-20 rounded-full object-cover"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-accent/20"
                 />
               ) : (
-                <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center border-2 border-accent/20">
                   <span className="text-2xl font-semibold text-accent">
                     {profile.displayName?.charAt(0) || profile.email?.charAt(0) || "U"}
                   </span>
