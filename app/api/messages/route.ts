@@ -80,6 +80,13 @@ const initializeMockData = () => {
             timestamp: "2024-01-25T10:45:00Z",
             status: "read",
           },
+          {
+            id: "msg-3",
+            senderId: "emma-rose",
+            text: "They're super soft and have absorbed so much energy from my training!",
+            timestamp: "2024-01-25T11:15:00Z",
+            status: "read",
+          },
         ],
       },
       "thread-emma": {
@@ -104,6 +111,50 @@ const initializeMockData = () => {
             timestamp: "2024-01-25T14:45:00Z",
             status: "read",
           },
+          {
+            id: "msg-3",
+            senderId: "emma-rose",
+            text: "Would you like to see more photos?",
+            timestamp: "2024-01-25T15:15:00Z",
+            status: "delivered",
+          },
+        ],
+      },
+      "thread-2": {
+        id: "thread-2",
+        participants: [
+          { id: "current-user", name: "You", avatar: "/placeholder.svg" },
+          { id: "sophie-luxe", name: "Sophie Luxe", avatar: "/woman-avatar-3.png", verified: true, rating: 4.8 },
+        ],
+        itemContext: {
+          id: "3",
+          title: "Designer Silk Stockings",
+          image: "/silk-stockings-detail.png",
+          price: 85,
+          status: "active",
+        },
+        messages: [
+          {
+            id: "msg-1",
+            senderId: "current-user",
+            text: "Hello! I'm interested in your designer silk stockings.",
+            timestamp: "2024-01-25T18:30:00Z",
+            status: "read",
+          },
+          {
+            id: "msg-2",
+            senderId: "sophie-luxe",
+            text: "Hi! Thank you for your interest. These are truly special pieces.",
+            timestamp: "2024-01-25T18:45:00Z",
+            status: "read",
+          },
+          {
+            id: "msg-3",
+            senderId: "sophie-luxe",
+            text: "They're truly a collector's piece!",
+            timestamp: "2024-01-25T19:15:00Z",
+            status: "delivered",
+          },
         ],
       },
     }
@@ -117,7 +168,30 @@ const initializeMockData = () => {
   }
 }
 
-// ... existing GET method ...
+export async function GET(request: NextRequest) {
+  initializeMockData()
+
+  const { searchParams } = new URL(request.url)
+  const threadId = searchParams.get("threadId")
+
+  if (!threadId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "threadId is required",
+      },
+      { status: 400 },
+    )
+  }
+
+  const messages = messageStore.get(threadId) || []
+
+  return NextResponse.json({
+    success: true,
+    messages,
+    threadId,
+  })
+}
 
 export async function POST(request: NextRequest) {
   initializeMockData()
@@ -166,7 +240,16 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now(),
     })
 
-    // ... existing timeout logic ...
+    // Simulate message delivery status updates
+    setTimeout(() => {
+      newMessage.status = "delivered"
+      saveToServerStorage()
+    }, 1000)
+
+    setTimeout(() => {
+      newMessage.status = "read"
+      saveToServerStorage()
+    }, 3000)
 
     return NextResponse.json({
       success: true,
