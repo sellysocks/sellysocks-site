@@ -158,24 +158,57 @@ export class MessagingClient {
   async getMessages(threadId: string) {
     try {
       const cachedMessages = this.loadFromStorage(`messages_${threadId}`)
+      const cachedConversation = this.loadFromStorage(`conversation_${threadId}`)
 
-      const response = await fetch(`/api/messages?threadId=${threadId}`)
-      const result = await response.json()
+      const [messagesResponse, conversationsResponse] = await Promise.all([
+        fetch(`/api/messages?threadId=${threadId}`),
+        fetch("/api/messages/conversations"),
+      ])
 
-      if (result.success) {
-        this.saveToStorage(`messages_${threadId}`, result.messages)
-        return result
-      } else if (cachedMessages) {
-        return { success: true, messages: cachedMessages }
+      const messagesResult = await messagesResponse.json()
+      const conversationsResult = await conversationsResponse.json()
+
+      if (messagesResult.success && conversationsResult.success) {
+        // Find the specific conversation for this thread
+        const conversation = conversationsResult.conversations.find((conv: any) => conv.id === threadId)
+
+        if (conversation) {
+          this.saveToStorage(`messages_${threadId}`, messagesResult.messages)
+          this.saveToStorage(`conversation_${threadId}`, conversation)
+
+          return {
+            success: true,
+            messages: messagesResult.messages,
+            conversation: conversation,
+          }
+        }
       }
 
-      return result
+      // Fallback to cached data if available
+      if (cachedMessages && cachedConversation) {
+        return {
+          success: true,
+          messages: cachedMessages,
+          conversation: cachedConversation,
+        }
+      }
+
+      return { success: false, error: "Conversation not found" }
     } catch (error) {
       console.error("Failed to get messages:", error)
+
+      // Try cached data as fallback
       const cachedMessages = this.loadFromStorage(`messages_${threadId}`)
-      if (cachedMessages) {
-        return { success: true, messages: cachedMessages }
+      const cachedConversation = this.loadFromStorage(`conversation_${threadId}`)
+
+      if (cachedMessages && cachedConversation) {
+        return {
+          success: true,
+          messages: cachedMessages,
+          conversation: cachedConversation,
+        }
       }
+
       throw error
     }
   }
