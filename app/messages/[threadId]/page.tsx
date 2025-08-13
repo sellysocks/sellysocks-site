@@ -156,14 +156,21 @@ export default function ChatPage({ params }: ChatPageProps) {
   const [message, setMessage] = useState("")
   const [sending, setSending] = useState(false)
   const [showTipModal, setShowTipModal] = useState(false)
+  const [messages, setMessages] = useState<(typeof mockConversations)[keyof typeof mockConversations]["messages"]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const conversation = mockConversations[params.threadId as keyof typeof mockConversations]
 
   useEffect(() => {
+    if (conversation) {
+      setMessages(conversation.messages)
+    }
+  }, [conversation])
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [conversation?.messages])
+  }, [messages])
 
   if (!user || !profile) {
     return (
@@ -193,12 +200,27 @@ export default function ChatPage({ params }: ChatPageProps) {
 
     setSending(true)
     try {
-      // Here you would send the message to Firestore
+      const newMessage = {
+        id: `msg-${Date.now()}`,
+        senderId: "current-user",
+        text: message.trim(),
+        timestamp: new Date().toISOString(),
+        status: "sent" as const,
+      }
+
+      setMessages((prev) => [...prev, newMessage])
+      setMessage("")
+
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === newMessage.id ? { ...msg, status: "delivered" as const } : msg)),
+        )
+      }, 1000)
+
       toast({
         title: "Message sent",
         description: "Your message has been delivered.",
       })
-      setMessage("")
     } catch (error) {
       toast({
         title: "Failed to send message",
@@ -213,7 +235,6 @@ export default function ChatPage({ params }: ChatPageProps) {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Here you would upload the image and send it as a message
       toast({
         title: "Image uploaded",
         description: "Your image has been sent.",
@@ -283,7 +304,6 @@ export default function ChatPage({ params }: ChatPageProps) {
 
   return (
     <MobileLayout showBack backHref="/messages" customHeader={customHeader} className="flex flex-col h-screen">
-      {/* Item Context */}
       <div className="p-4 border-b">
         <Card>
           <CardContent className="p-3">
@@ -315,10 +335,9 @@ export default function ChatPage({ params }: ChatPageProps) {
         </Card>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
-          {conversation.messages.map((msg) => {
+          {messages.map((msg) => {
             const isCurrentUser = msg.senderId === "current-user"
             const sender = conversation.participants.find((p) => p.id === msg.senderId)!
 
@@ -365,7 +384,6 @@ export default function ChatPage({ params }: ChatPageProps) {
         </div>
       </div>
 
-      {/* Message Input */}
       <div className="border-t bg-card p-4">
         <form onSubmit={handleSendMessage} className="flex items-end gap-2">
           <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
