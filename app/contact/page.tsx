@@ -176,8 +176,8 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-medium mb-1">Email Support</h4>
                       <p className="text-sm text-muted-foreground mb-2">For urgent matters or detailed inquiries</p>
-                      <a href="mailto:socksselly@gmail.com" className="text-primary hover:underline text-sm">
-                        socksselly@gmail.com
+                      <a href="mailto:support@sellysocks.com" className="text-primary hover:underline text-sm">
+                        support@sellysocks.com
                       </a>
                     </div>
                   </div>
