@@ -63,6 +63,10 @@ export default function HomePage() {
       }
       showBack={false}
     >
+      <div className="px-4 mb-4">
+        <h1 className="text-lg font-medium text-white text-center">Find your favourite creators used items 😈</h1>
+      </div>
+
       {/* Search & Filters */}
       <div className="px-4 mb-6">
         <div className="relative mb-4">
