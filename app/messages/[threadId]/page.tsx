@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
-import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-import { Send, ImageIcon, ArrowLeft, MoreVertical, Star } from "lucide-react"
+import { Send, ImageIcon, MoreVertical, Star, Heart } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +17,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { MobileLayout } from "@/components/mobile/mobile-layout"
+import { TipModal } from "@/components/mobile/tip-modal"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -100,6 +100,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   const { toast } = useToast()
   const [message, setMessage] = useState("")
   const [sending, setSending] = useState(false)
+  const [showTipModal, setShowTipModal] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -111,16 +112,17 @@ export default function ChatPage({ params }: ChatPageProps) {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-3xl font-serif font-bold mb-4">Sign In Required</h1>
-          <p className="text-muted-foreground mb-8">You need to be signed in to view messages.</p>
-          <Button asChild>
-            <Link href="/auth/signin">Sign In</Link>
-          </Button>
+      <MobileLayout title="Messages" showBack backHref="/messages">
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold mb-2">Sign In Required</h2>
+            <p className="text-muted-foreground mb-4">You need to be signed in to view messages.</p>
+            <Button asChild>
+              <Link href="/auth/signin">Sign In</Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      </MobileLayout>
     )
   }
 
@@ -176,183 +178,179 @@ export default function ChatPage({ params }: ChatPageProps) {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navigation />
-
-      {/* Chat Header */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/messages">
-                  <ArrowLeft className="h-4 w-4" />
-                </Link>
-              </Button>
-
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={otherParticipant.avatar || "/placeholder.svg"} alt={otherParticipant.name} />
-                <AvatarFallback>{otherParticipant.name[0]}</AvatarFallback>
-              </Avatar>
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="font-medium">{otherParticipant.name}</h2>
-                  {otherParticipant.verified && (
-                    <Badge variant="secondary" className="text-xs">
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                  <span>{otherParticipant.rating}</span>
-                  <span>•</span>
-                  <span>{otherParticipant.responseTime}</span>
-                </div>
-              </div>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/seller/${otherParticipant.id}`}>View Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/item/${conversation.itemContext.id}`}>View Item</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">Report User</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+  const customHeader = (
+    <div className="flex items-center justify-between p-4 border-b bg-card">
+      <div className="flex items-center gap-3">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src={otherParticipant.avatar || "/placeholder.svg"} alt={otherParticipant.name} />
+          <AvatarFallback>{otherParticipant.name[0]}</AvatarFallback>
+        </Avatar>
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-sm">{otherParticipant.name}</h2>
+            {otherParticipant.verified && (
+              <Badge variant="secondary" className="text-xs">
+                Verified
+              </Badge>
+            )}
           </div>
-
-          {/* Item Context */}
-          <Card className="mt-4">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
-                  <img
-                    src={conversation.itemContext.image || "/placeholder.svg"}
-                    alt={conversation.itemContext.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm truncate">{conversation.itemContext.title}</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-primary">£{conversation.itemContext.price}</span>
-                    <Badge
-                      variant={conversation.itemContext.status === "active" ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {conversation.itemContext.status === "active" ? "Available" : "Sold"}
-                    </Badge>
-                  </div>
-                </div>
-                <Button size="sm" asChild>
-                  <Link href={`/item/${conversation.itemContext.id}`}>View</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            <span>{otherParticipant.rating}</span>
+          </div>
         </div>
       </div>
 
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setShowTipModal(true)}>
+            <Heart className="h-4 w-4 mr-2" />
+            Send Tip
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href={`/seller/${otherParticipant.id}`}>View Profile</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/item/${conversation.itemContext.id}`}>View Item</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-destructive">Report User</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+
+  return (
+    <MobileLayout showBack backHref="/messages" customHeader={customHeader} className="flex flex-col h-screen">
+      {/* Item Context */}
+      <div className="p-4 border-b">
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
+                <img
+                  src={conversation.itemContext.image || "/placeholder.svg"}
+                  alt={conversation.itemContext.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm truncate">{conversation.itemContext.title}</h3>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-primary">£{conversation.itemContext.price}</span>
+                  <Badge
+                    variant={conversation.itemContext.status === "active" ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {conversation.itemContext.status === "active" ? "Available" : "Sold"}
+                  </Badge>
+                </div>
+              </div>
+              <Button size="sm" asChild>
+                <Link href={`/item/${conversation.itemContext.id}`}>View</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6 max-w-4xl">
-          <div className="space-y-4">
-            {conversation.messages.map((msg) => {
-              const isCurrentUser = msg.senderId === "current-user"
-              const sender = conversation.participants.find((p) => p.id === msg.senderId)!
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-4">
+          {conversation.messages.map((msg) => {
+            const isCurrentUser = msg.senderId === "current-user"
+            const sender = conversation.participants.find((p) => p.id === msg.senderId)!
 
-              return (
-                <div key={msg.id} className={`flex gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}>
-                  {!isCurrentUser && (
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={sender.avatar || "/placeholder.svg"} alt={sender.name} />
-                      <AvatarFallback className="text-xs">{sender.name[0]}</AvatarFallback>
-                    </Avatar>
-                  )}
+            return (
+              <div key={msg.id} className={`flex gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}>
+                {!isCurrentUser && (
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={sender.avatar || "/placeholder.svg"} alt={sender.name} />
+                    <AvatarFallback className="text-xs">{sender.name[0]}</AvatarFallback>
+                  </Avatar>
+                )}
 
-                  <div className={`flex flex-col max-w-[70%] ${isCurrentUser ? "items-end" : "items-start"}`}>
-                    <div
-                      className={`rounded-lg px-4 py-2 ${
-                        isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border"
-                      }`}
-                    >
-                      {msg.imageUrl && (
-                        <div className="mb-2">
-                          <img
-                            src={msg.imageUrl || "/placeholder.svg"}
-                            alt="Shared image"
-                            className="max-w-full h-auto rounded"
-                          />
-                        </div>
-                      )}
-                      {msg.text && <p className="text-sm">{msg.text}</p>}
-                    </div>
+                <div className={`flex flex-col max-w-[70%] ${isCurrentUser ? "items-end" : "items-start"}`}>
+                  <div
+                    className={`rounded-lg px-4 py-2 ${
+                      isCurrentUser ? "bg-primary text-primary-foreground" : "bg-card border"
+                    }`}
+                  >
+                    {msg.imageUrl && (
+                      <div className="mb-2">
+                        <img
+                          src={msg.imageUrl || "/placeholder.svg"}
+                          alt="Shared image"
+                          className="max-w-full h-auto rounded"
+                        />
+                      </div>
+                    )}
+                    {msg.text && <p className="text-sm">{msg.text}</p>}
+                  </div>
 
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground">{formatMessageTime(msg.timestamp)}</span>
-                      {isCurrentUser && (
-                        <span className="text-xs text-muted-foreground">
-                          {msg.status === "read" ? "Read" : msg.status === "delivered" ? "Delivered" : "Sent"}
-                        </span>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-muted-foreground">{formatMessageTime(msg.timestamp)}</span>
+                    {isCurrentUser && (
+                      <span className="text-xs text-muted-foreground">
+                        {msg.status === "read" ? "Read" : msg.status === "delivered" ? "Delivered" : "Sent"}
+                      </span>
+                    )}
                   </div>
                 </div>
-              )
-            })}
-            <div ref={messagesEndRef} />
-          </div>
+              </div>
+            )
+          })}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
       {/* Message Input */}
-      <div className="border-t bg-background">
-        <div className="container mx-auto px-4 py-4 max-w-4xl">
-          <form onSubmit={handleSendMessage} className="flex items-end gap-2">
-            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
+      <div className="border-t bg-card p-4">
+        <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-shrink-0"
-            >
-              <ImageIcon className="h-4 w-4" />
-            </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-shrink-0"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
 
-            <div className="flex-1">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message..."
-                disabled={sending}
-                className="resize-none"
-              />
-            </div>
+          <div className="flex-1">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type your message..."
+              disabled={sending}
+              className="resize-none"
+            />
+          </div>
 
-            <Button type="submit" disabled={sending || !message.trim()} className="flex-shrink-0">
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
+          <Button type="submit" disabled={sending || !message.trim()} className="flex-shrink-0">
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
 
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            Keep conversations respectful and focused on the item. Report any inappropriate behavior.
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          Keep conversations respectful and focused on the item. Report any inappropriate behavior.
+        </p>
       </div>
-    </div>
+
+      <TipModal
+        isOpen={showTipModal}
+        onClose={() => setShowTipModal(false)}
+        recipientName={otherParticipant.name}
+        recipientId={otherParticipant.id}
+      />
+    </MobileLayout>
   )
 }
