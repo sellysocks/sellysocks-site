@@ -23,34 +23,58 @@ export async function POST(request: NextRequest) {
 
     // Handle the event
     switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session
-        const { orderId, sellerId, shippingInfo, specialInstructions } = session.metadata!
-
-        // Update order in Firestore
-        // const orderRef = doc(db, 'orders', orderId)
-        // await updateDoc(orderRef, {
-        //   paymentStatus: 'paid',
-        //   paymentIntentId: session.payment_intent,
-        //   shippingInfo: JSON.parse(shippingInfo),
-        //   specialInstructions,
-        //   payoutStatus: 'hold',
-        //   paidAt: new Date(),
-        // })
-
-        console.log(`Order ${orderId} payment completed`)
-        break
-      }
-
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
-        console.log(`Payment ${paymentIntent.id} succeeded`)
+        const { orderId, sellerAccountId, platformFee } = paymentIntent.metadata
+
+        // Create order record in database
+        const orderData = {
+          id: orderId,
+          paymentIntentId: paymentIntent.id,
+          sellerId: sellerAccountId,
+          buyerId: paymentIntent.customer,
+          amount: paymentIntent.amount,
+          platformFee: Number.parseInt(platformFee || "0"),
+          sellerAmount: paymentIntent.amount - Number.parseInt(platformFee || "0"),
+          currency: paymentIntent.currency,
+          status: "paid",
+          payoutStatus: "hold", // Hold funds until delivery confirmed
+          createdAt: new Date(paymentIntent.created * 1000),
+          paidAt: new Date(),
+        }
+
+        // In production, save to Firebase/database
+        console.log("Order created:", orderData)
         break
       }
 
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
-        console.log(`Payment ${paymentIntent.id} failed`)
+        const { orderId } = paymentIntent.metadata
+
+        // Update order status to failed
+        console.log(`Payment failed for order ${orderId}:`, paymentIntent.last_payment_error?.message)
+        break
+      }
+
+      case "transfer.created": {
+        const transfer = event.data.object as Stripe.Transfer
+        console.log(`Transfer created: ${transfer.id} for ${transfer.amount}`)
+        break
+      }
+
+      case "payout.paid": {
+        const payout = event.data.object as Stripe.Payout
+        console.log(`Payout completed: ${payout.id} for ${payout.amount}`)
+        break
+      }
+
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session
+        const { orderId, sellerId, shippingInfo, specialInstructions } = session.metadata!
+
+        // Legacy support for existing checkout sessions
+        console.log(`Checkout session completed for order ${orderId}`)
         break
       }
 

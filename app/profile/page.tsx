@@ -13,6 +13,7 @@ import {
   Settings,
   HelpCircle,
   MessageCircle,
+  CreditCard,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -57,6 +58,17 @@ export default function ProfilePage() {
       title: "My Listings",
       caption: `${profile.stats.itemsSold + 5} active items`,
       href: "/profile/listings",
+    },
+    {
+      icon: (
+        <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+          <CreditCard className="w-4 h-4 text-accent" />
+        </div>
+      ),
+      title: "Payouts",
+      caption: profile.stripeAccountId ? "Connected" : "Set up payouts",
+      href: profile.stripeAccountId ? "/profile/payouts" : "/api/stripe/connect/onboard",
+      isExternal: !profile.stripeAccountId,
     },
     {
       icon: (
@@ -185,22 +197,39 @@ export default function ProfilePage() {
 
         {/* Navigation List */}
         <div className="space-y-2">
-          {navigationItems.map((item, index) => (
-            <Link key={index} href={item.href}>
-              <div className="bg-card rounded-xl p-4 border border-border hover:bg-card/80 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {item.icon}
-                    <div>
-                      <div className="font-medium text-white">{item.title}</div>
-                      <div className="text-xs text-muted-foreground">{item.caption}</div>
+          {navigationItems.map((item, index) =>
+            item.isExternal ? (
+              <a key={index} href={item.href} className="block">
+                <div className="bg-card rounded-xl p-4 border border-border hover:bg-card/80 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {item.icon}
+                      <div>
+                        <div className="font-medium text-white">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">{item.caption}</div>
+                      </div>
                     </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 </div>
-              </div>
-            </Link>
-          ))}
+              </a>
+            ) : (
+              <Link key={index} href={item.href}>
+                <div className="bg-card rounded-xl p-4 border border-border hover:bg-card/80 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {item.icon}
+                      <div>
+                        <div className="font-medium text-white">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">{item.caption}</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                </div>
+              </Link>
+            ),
+          )}
         </div>
       </div>
 

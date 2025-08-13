@@ -1,19 +1,22 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { Navigation } from "@/components/navigation"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useAuth } from "@/components/auth-provider"
+import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { CreditCard, Shield, Truck, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { ChevronLeft, MoreHorizontal, Shield, Truck, CreditCard } from "lucide-react"
+import { loadStripe } from "@stripe/stripe-js"
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { notFound } from "next/navigation"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 // Mock order data
 const mockOrders = {
@@ -33,6 +36,7 @@ const mockOrders = {
       name: "Emma Rose",
       avatar: "/diverse-woman-avatar.png",
       verified: true,
+      stripeAccountId: "acct_seller123",
     },
     buyer: {
       id: "current-user",
@@ -49,17 +53,17 @@ const mockOrders = {
   },
 }
 
-interface CheckoutPageProps {
-  params: {
-    orderId: string
-  }
+interface CheckoutFormProps {
+  order: any
+  clientSecret: string
 }
 
-export default function CheckoutPage({ params }: CheckoutPageProps) {
-  const { user, profile } = useAuth()
+function CheckoutForm({ order, clientSecret }: CheckoutFormProps) {
+  const stripe = useStripe()
+  const elements = useElements()
   const { toast } = useToast()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe")
   const [shippingInfo, setShippingInfo] = useState({
     fullName: "",
     address: "",
@@ -69,58 +73,303 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   })
   const [specialInstructions, setSpecialInstructions] = useState("")
 
-  const order = mockOrders[params.orderId as keyof typeof mockOrders]
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
 
-  useEffect(() => {
-    if (profile) {
-      setShippingInfo((prev) => ({
-        ...prev,
-        fullName: profile.displayName || "",
-      }))
+    if (!stripe || !elements) {
+      return
     }
-  }, [profile])
 
-  if (!user || !profile) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-3xl font-serif font-bold mb-4">Sign In Required</h1>
-          <p className="text-muted-foreground mb-8">You need to be signed in to complete checkout.</p>
-          <Button asChild>
-            <Link href="/auth/signin">Sign In</Link>
+    setLoading(true)
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout/success?order_id=${order.id}`,
+        shipping: {
+          name: shippingInfo.fullName,
+          address: {
+            line1: shippingInfo.address,
+            city: shippingInfo.city,
+            postal_code: shippingInfo.postalCode,
+            country: "GB",
+          },
+        },
+      },
+    })
+
+    if (error) {
+      toast({
+        title: "Payment failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+
+    setLoading(false)
+  }
+
+  const isFormValid = shippingInfo.fullName && shippingInfo.address && shippingInfo.city && shippingInfo.postalCode
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="flex items-center justify-between p-4">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-white hover:bg-card">
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+
+          <div className="text-center">
+            <div className="text-white font-medium">Checkout</div>
+            <div className="text-xs text-muted-foreground">Complete your purchase</div>
+          </div>
+
+          <Button variant="ghost" size="sm" className="text-white hover:bg-card">
+            <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
       </div>
-    )
-  }
 
-  if (!order) {
-    notFound()
-  }
+      {/* Content */}
+      <div className="p-4 pb-24 space-y-6">
+        {/* Order Summary */}
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex gap-3 mb-4">
+            <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+              <img
+                src={order.item.image || "/placeholder.svg"}
+                alt={order.item.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-white line-clamp-2">{order.item.title}</h3>
+              <div className="flex gap-1 mt-1">
+                <Badge variant="secondary" className="text-xs">
+                  Size {order.item.size}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {order.item.condition}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Used for: {order.item.usedFor}</p>
+            </div>
+          </div>
 
-  const handleStripeCheckout = async () => {
-    setLoading(true)
+          {/* Seller */}
+          <div className="flex items-center gap-2 p-3 bg-background rounded-lg mb-4">
+            <img
+              src={order.seller.avatar || "/placeholder.svg"}
+              alt={order.seller.name}
+              className="w-8 h-8 rounded-full"
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-medium text-white">{order.seller.name}</span>
+                {order.seller.verified && (
+                  <Badge variant="secondary" className="text-xs">
+                    ✓
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing */}
+          <div className="space-y-2 pt-4 border-t border-border">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Item price</span>
+              <span className="text-white">£{order.pricing.itemPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Platform fee (10%)</span>
+              <span className="text-white">£{order.pricing.platformFee.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Shipping</span>
+              <span className="text-white">£{order.pricing.shippingCost.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
+              <span className="text-white">Total</span>
+              <span className="text-white">£{order.pricing.total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Shipping Information */}
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Truck className="w-5 h-5 text-accent" />
+            <h3 className="font-medium text-white">Shipping Information</h3>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="fullName" className="text-white">
+                Full Name *
+              </Label>
+              <Input
+                id="fullName"
+                value={shippingInfo.fullName}
+                onChange={(e) => setShippingInfo({ ...shippingInfo, fullName: e.target.value })}
+                placeholder="Your full name"
+                className="bg-background border-border text-white"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="address" className="text-white">
+                Address *
+              </Label>
+              <Input
+                id="address"
+                value={shippingInfo.address}
+                onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
+                placeholder="Street address"
+                className="bg-background border-border text-white"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="city" className="text-white">
+                  City *
+                </Label>
+                <Input
+                  id="city"
+                  value={shippingInfo.city}
+                  onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
+                  placeholder="City"
+                  className="bg-background border-border text-white"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="postalCode" className="text-white">
+                  Postal Code *
+                </Label>
+                <Input
+                  id="postalCode"
+                  value={shippingInfo.postalCode}
+                  onChange={(e) => setShippingInfo({ ...shippingInfo, postalCode: e.target.value })}
+                  placeholder="Postal code"
+                  className="bg-background border-border text-white"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="instructions" className="text-white">
+                Special Instructions (Optional)
+              </Label>
+              <Textarea
+                id="instructions"
+                value={specialInstructions}
+                onChange={(e) => setSpecialInstructions(e.target.value)}
+                placeholder="Any special delivery instructions..."
+                className="bg-background border-border text-white"
+                rows={3}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Payment Method */}
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <CreditCard className="w-5 h-5 text-accent" />
+            <h3 className="font-medium text-white">Payment Method</h3>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <PaymentElement
+              options={{
+                layout: "tabs",
+                paymentMethodOrder: ["apple_pay", "google_pay", "card"],
+              }}
+            />
+
+            <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <Shield className="w-4 h-4 text-green-400" />
+              <p className="text-sm text-green-400">
+                Your payment is secured with 256-bit SSL encryption. We never store your payment details.
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-accent hover:bg-accent/90 text-white"
+              disabled={loading || !stripe || !isFormValid}
+            >
+              {loading ? "Processing..." : `Pay £${order.pricing.total.toFixed(2)}`}
+            </Button>
+          </form>
+
+          <div className="text-xs text-muted-foreground space-y-1 mt-4">
+            <p>• Payment is held securely until delivery is confirmed</p>
+            <p>• Seller receives payout after successful delivery</p>
+            <p>• Full refund if item doesn't match description</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface CheckoutPageProps {
+  params: {
+    orderId: string
+  }
+}
+
+export default function CheckoutPage({ params }: CheckoutPageProps) {
+  const { user, profile } = useAuth()
+  const { toast } = useToast()
+  const router = useRouter()
+  const [clientSecret, setClientSecret] = useState("")
+  const [loading, setLoading] = useState(true)
+
+  const order = mockOrders[params.orderId as keyof typeof mockOrders]
+
+  useEffect(() => {
+    if (!user || !profile) {
+      router.push("/auth/signin")
+      return
+    }
+
+    if (!order) {
+      notFound()
+      return
+    }
+
+    // Create payment intent
+    createPaymentIntent()
+  }, [user, profile, order])
+
+  const createPaymentIntent = async () => {
     try {
-      const response = await fetch("/api/stripe/checkout", {
+      const response = await fetch("/api/stripe/create-payment-intent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           orderId: order.id,
-          shippingInfo,
-          specialInstructions,
+          amount: Math.round(order.pricing.total * 100), // Convert to cents
+          sellerAccountId: order.seller.stripeAccountId,
+          platformFee: Math.round(order.pricing.platformFee * 100),
         }),
       })
 
-      const { url } = await response.json()
-      if (url) {
-        window.location.href = url
-      }
+      const { clientSecret } = await response.json()
+      setClientSecret(clientSecret)
     } catch (error) {
       toast({
-        title: "Checkout failed",
+        title: "Failed to initialize payment",
         description: "Please try again or contact support.",
         variant: "destructive",
       })
@@ -129,261 +378,41 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     }
   }
 
-  const handlePayPalCheckout = async () => {
-    toast({
-      title: "PayPal integration coming soon",
-      description: "PayPal payments will be available in a future update.",
-    })
+  if (!user || !profile) {
+    return null
   }
 
-  const isFormValid = shippingInfo.fullName && shippingInfo.address && shippingInfo.city && shippingInfo.postalCode
+  if (!order) {
+    notFound()
+  }
+
+  if (loading || !clientSecret) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-white">Loading checkout...</div>
+      </div>
+    )
+  }
+
+  const options = {
+    clientSecret,
+    appearance: {
+      theme: "night" as const,
+      variables: {
+        colorPrimary: "#FF4D8D",
+        colorBackground: "#15161C",
+        colorText: "#ffffff",
+        colorDanger: "#df1b41",
+        fontFamily: "Inter, system-ui, sans-serif",
+        spacingUnit: "4px",
+        borderRadius: "8px",
+      },
+    },
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href={`/item/${order.item.id}`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-serif font-bold">Checkout</h1>
-              <p className="text-muted-foreground">Complete your purchase securely</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Shipping Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="h-5 w-5" />
-                    Shipping Information
-                  </CardTitle>
-                  <CardDescription>Where should we send your item?</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="fullName">Full Name *</Label>
-                    <Input
-                      id="fullName"
-                      value={shippingInfo.fullName}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, fullName: e.target.value })}
-                      placeholder="Your full name"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="address">Address *</Label>
-                    <Input
-                      id="address"
-                      value={shippingInfo.address}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
-                      placeholder="Street address"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Input
-                        id="city"
-                        value={shippingInfo.city}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
-                        placeholder="City"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="postalCode">Postal Code *</Label>
-                      <Input
-                        id="postalCode"
-                        value={shippingInfo.postalCode}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, postalCode: e.target.value })}
-                        placeholder="Postal code"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input id="country" value={shippingInfo.country} disabled className="bg-muted" />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="instructions">Special Instructions (Optional)</Label>
-                    <Textarea
-                      id="instructions"
-                      value={specialInstructions}
-                      onChange={(e) => setSpecialInstructions(e.target.value)}
-                      placeholder="Any special delivery instructions..."
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Payment Method */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Payment Method
-                  </CardTitle>
-                  <CardDescription>Choose how you'd like to pay</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card
-                      className={`cursor-pointer transition-colors ${
-                        paymentMethod === "stripe" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                      }`}
-                      onClick={() => setPaymentMethod("stripe")}
-                    >
-                      <CardContent className="p-4 text-center">
-                        <CreditCard className="h-8 w-8 mx-auto mb-2" />
-                        <h3 className="font-medium mb-1">Credit/Debit Card</h3>
-                        <p className="text-xs text-muted-foreground">Secure payment via Stripe</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card
-                      className={`cursor-pointer transition-colors ${
-                        paymentMethod === "paypal" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                      }`}
-                      onClick={() => setPaymentMethod("paypal")}
-                    >
-                      <CardContent className="p-4 text-center">
-                        <div className="h-8 w-8 mx-auto mb-2 bg-blue-600 rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">PP</span>
-                        </div>
-                        <h3 className="font-medium mb-1">PayPal</h3>
-                        <p className="text-xs text-muted-foreground">Coming soon</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <Shield className="h-4 w-4 text-green-600" />
-                    <p className="text-sm text-green-800">
-                      Your payment is secured with 256-bit SSL encryption. We never store your payment details.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-4">
-                <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Item */}
-                  <div className="flex gap-3">
-                    <div className="w-16 h-16 rounded bg-muted overflow-hidden flex-shrink-0">
-                      <img
-                        src={order.item.image || "/placeholder.svg"}
-                        alt={order.item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm line-clamp-2">{order.item.title}</h3>
-                      <div className="flex gap-1 mt-1">
-                        <Badge variant="secondary" className="text-xs">
-                          Size {order.item.size}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {order.item.condition}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">Used for: {order.item.usedFor}</p>
-                    </div>
-                  </div>
-
-                  {/* Seller */}
-                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded">
-                    <img
-                      src={order.seller.avatar || "/placeholder.svg"}
-                      alt={order.seller.name}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-medium">{order.seller.name}</span>
-                        {order.seller.verified && (
-                          <Badge variant="secondary" className="text-xs">
-                            ✓
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Pricing */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Item price</span>
-                      <span>£{order.pricing.itemPrice.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Platform fee (10%)</span>
-                      <span>£{order.pricing.platformFee.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Shipping</span>
-                      <span>£{order.pricing.shippingCost.toFixed(2)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-bold">
-                      <span>Total</span>
-                      <span>£{order.pricing.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {paymentMethod === "stripe" && (
-                      <Button className="w-full" onClick={handleStripeCheckout} disabled={loading || !isFormValid}>
-                        {loading ? "Processing..." : `Pay £${order.pricing.total.toFixed(2)} with Stripe`}
-                      </Button>
-                    )}
-
-                    {paymentMethod === "paypal" && (
-                      <Button
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                        onClick={handlePayPalCheckout}
-                        disabled={!isFormValid}
-                      >
-                        Pay with PayPal (Coming Soon)
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <p>• Payment is held securely until delivery is confirmed</p>
-                    <p>• Seller receives payout after successful delivery</p>
-                    <p>• Full refund if item doesn't match description</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Elements options={options} stripe={stripePromise}>
+      <CheckoutForm order={order} clientSecret={clientSecret} />
+    </Elements>
   )
 }

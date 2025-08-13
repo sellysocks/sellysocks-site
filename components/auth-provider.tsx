@@ -19,6 +19,8 @@ interface UserProfile {
   bio?: string
   role: "user" | "admin"
   verifiedSeller: boolean
+  stripeAccountId?: string
+  payoutsEnabled?: boolean
   stats: {
     itemsSold: number
     totalEarnings: number
@@ -57,6 +59,8 @@ const mockProfile: UserProfile = {
   bio: "Love collecting unique socks!",
   role: "user",
   verifiedSeller: true,
+  stripeAccountId: "acct_demo123",
+  payoutsEnabled: true,
   stats: {
     itemsSold: 12,
     totalEarnings: 240,
@@ -127,6 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       bio: "",
       role: "user" as const,
       verifiedSeller: false,
+      stripeAccountId: undefined,
+      payoutsEnabled: false,
       stats: {
         itemsSold: 0,
         totalEarnings: 0,
