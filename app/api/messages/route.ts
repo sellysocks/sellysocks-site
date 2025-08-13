@@ -1,11 +1,55 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectionManager } from "./events/route"
 
-// In-memory message store (in production, use a database)
 const messageStore = new Map<string, any[]>()
 const conversationStore = new Map<string, any>()
 
+const persistenceKey = "sellysock_server_messages"
+
+const saveToServerStorage = () => {
+  if (typeof global !== "undefined") {
+    try {
+      // In a real app, this would save to a database
+      // For now, we'll use a global variable to simulate persistence
+      ;(global as any)[persistenceKey] = {
+        messages: Object.fromEntries(messageStore),
+        conversations: Object.fromEntries(conversationStore),
+        timestamp: Date.now(),
+      }
+    } catch (error) {
+      console.error("Failed to save server data:", error)
+    }
+  }
+}
+
+const loadFromServerStorage = () => {
+  if (typeof global !== "undefined") {
+    try {
+      const data = (global as any)[persistenceKey]
+      if (data && data.messages && data.conversations) {
+        // Restore messages
+        Object.entries(data.messages).forEach(([key, value]) => {
+          messageStore.set(key, value as any[])
+        })
+        // Restore conversations
+        Object.entries(data.conversations).forEach(([key, value]) => {
+          conversationStore.set(key, value as any)
+        })
+        console.log("✅ Restored messages from server storage")
+        return true
+      }
+    } catch (error) {
+      console.error("Failed to load server data:", error)
+    }
+  }
+  return false
+}
+
 const initializeMockData = () => {
+  if (loadFromServerStorage()) {
+    return
+  }
+
   if (messageStore.size === 0) {
     const mockConversations = {
       "thread-1": {
@@ -68,34 +112,12 @@ const initializeMockData = () => {
       conversationStore.set(threadId, conversation)
       messageStore.set(threadId, conversation.messages)
     })
+
+    saveToServerStorage()
   }
 }
 
-export async function GET(request: NextRequest) {
-  initializeMockData()
-
-  const { searchParams } = new URL(request.url)
-  const threadId = searchParams.get("threadId")
-
-  if (threadId) {
-    // Get messages for specific thread
-    const messages = messageStore.get(threadId) || []
-    const conversation = conversationStore.get(threadId)
-
-    return NextResponse.json({
-      success: true,
-      messages,
-      conversation,
-    })
-  }
-
-  // Get all conversations
-  const conversations = Array.from(conversationStore.values())
-  return NextResponse.json({
-    success: true,
-    conversations,
-  })
-}
+// ... existing GET method ...
 
 export async function POST(request: NextRequest) {
   initializeMockData()
@@ -135,6 +157,8 @@ export async function POST(request: NextRequest) {
       conversationStore.set(threadId, conversation)
     }
 
+    saveToServerStorage()
+
     connectionManager.broadcast(threadId, {
       type: "new_message",
       threadId,
@@ -142,49 +166,7 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now(),
     })
 
-    setTimeout(() => {
-      const updatedMessages = messageStore.get(threadId) || []
-      const messageIndex = updatedMessages.findIndex((msg) => msg.id === newMessage.id)
-      if (messageIndex !== -1) {
-        updatedMessages[messageIndex].status = "delivered"
-        messageStore.set(threadId, updatedMessages)
-
-        // Broadcast status update
-        connectionManager.broadcast(threadId, {
-          type: "message_status_update",
-          threadId,
-          messageId: newMessage.id,
-          status: "delivered",
-          timestamp: Date.now(),
-        })
-      }
-    }, 1000)
-
-    setTimeout(() => {
-      const conversation = conversationStore.get(threadId)
-      if (conversation) {
-        const otherParticipants = conversation.participants.filter((p: any) => p.id !== senderId)
-        const someoneOnline = otherParticipants.some((p: any) => connectionManager.isUserOnline(p.id))
-
-        if (someoneOnline) {
-          const updatedMessages = messageStore.get(threadId) || []
-          const messageIndex = updatedMessages.findIndex((msg) => msg.id === newMessage.id)
-          if (messageIndex !== -1) {
-            updatedMessages[messageIndex].status = "read"
-            messageStore.set(threadId, updatedMessages)
-
-            // Broadcast read status
-            connectionManager.broadcast(threadId, {
-              type: "message_status_update",
-              threadId,
-              messageId: newMessage.id,
-              status: "read",
-              timestamp: Date.now(),
-            })
-          }
-        }
-      }
-    }, 3000)
+    // ... existing timeout logic ...
 
     return NextResponse.json({
       success: true,

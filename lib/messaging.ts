@@ -7,6 +7,29 @@ export class MessagingClient {
   private lastMessageId: string | null = null
   private isConnected = false
 
+  private saveToStorage(key: string, data: any) {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`sellysock_${key}`, JSON.stringify(data))
+      } catch (error) {
+        console.error("Failed to save to localStorage:", error)
+      }
+    }
+  }
+
+  private loadFromStorage(key: string) {
+    if (typeof window !== "undefined") {
+      try {
+        const data = localStorage.getItem(`sellysock_${key}`)
+        return data ? JSON.parse(data) : null
+      } catch (error) {
+        console.error("Failed to load from localStorage:", error)
+        return null
+      }
+    }
+    return null
+  }
+
   connect(threadId: string, userId = "current-user") {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval)
@@ -15,6 +38,8 @@ export class MessagingClient {
     this.currentThreadId = threadId
     this.currentUserId = userId
     this.isConnected = true
+
+    this.lastMessageId = this.loadFromStorage(`lastMessage_${threadId}`)
 
     // Immediately notify connection
     this.connectionHandlers.forEach((handler) => handler(true))
@@ -39,6 +64,8 @@ export class MessagingClient {
       const result = await response.json()
 
       if (result.success && result.messages) {
+        this.saveToStorage(`messages_${this.currentThreadId}`, result.messages)
+
         const newMessages = result.messages.filter(
           (msg: any) => !this.lastMessageId || msg.timestamp > this.lastMessageId,
         )
@@ -46,6 +73,7 @@ export class MessagingClient {
         if (newMessages.length > 0) {
           // Update last message timestamp
           this.lastMessageId = newMessages[newMessages.length - 1].timestamp
+          this.saveToStorage(`lastMessage_${this.currentThreadId}`, this.lastMessageId)
 
           // Notify handlers of new messages
           newMessages.forEach((message: any) => {
@@ -113,6 +141,13 @@ export class MessagingClient {
       })
 
       const result = await response.json()
+
+      if (result.success && result.message) {
+        const existingMessages = this.loadFromStorage(`messages_${threadId}`) || []
+        existingMessages.push(result.message)
+        this.saveToStorage(`messages_${threadId}`, existingMessages)
+      }
+
       return result
     } catch (error) {
       console.error("Failed to send message:", error)
@@ -122,11 +157,25 @@ export class MessagingClient {
 
   async getMessages(threadId: string) {
     try {
+      const cachedMessages = this.loadFromStorage(`messages_${threadId}`)
+
       const response = await fetch(`/api/messages?threadId=${threadId}`)
       const result = await response.json()
+
+      if (result.success) {
+        this.saveToStorage(`messages_${threadId}`, result.messages)
+        return result
+      } else if (cachedMessages) {
+        return { success: true, messages: cachedMessages }
+      }
+
       return result
     } catch (error) {
       console.error("Failed to get messages:", error)
+      const cachedMessages = this.loadFromStorage(`messages_${threadId}`)
+      if (cachedMessages) {
+        return { success: true, messages: cachedMessages }
+      }
       throw error
     }
   }
