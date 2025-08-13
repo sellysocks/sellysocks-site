@@ -60,7 +60,7 @@ export default function SignUpPage() {
       })
 
       setTimeout(() => {
-        router.push("/")
+        router.push("/profile")
       }, 1000)
     } catch (error) {
       console.error("Sign up error:", error)

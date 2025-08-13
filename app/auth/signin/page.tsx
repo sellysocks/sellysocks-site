@@ -31,7 +31,7 @@ export default function SignInPage() {
         title: "Welcome back!",
         description: "You've been signed in successfully.",
       })
-      router.push("/")
+      router.push("/profile")
     } catch (error) {
       toast({
         title: "Sign in failed",

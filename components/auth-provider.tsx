@@ -14,6 +14,7 @@ interface UserProfile {
   uid: string
   email: string
   displayName?: string
+  handle?: string // Added handle field
   avatar?: string
   bio?: string
   role: "user" | "admin"
@@ -34,7 +35,9 @@ interface AuthContextType {
   isFirebaseConfigured: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, displayName?: string) => Promise<void>
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void> // Added updateProfile method
   logout: () => Promise<void>
+  needsProfileSetup: () => boolean // Added profile setup check
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -121,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       displayName: displayName || email.split("@")[0],
       avatar: "/diverse-woman-avatar.png",
-      bio: "New to Selly Socks!",
+      bio: "",
       role: "user" as const,
       verifiedSeller: false,
       stats: {
@@ -144,6 +147,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null)
   }
 
+  const needsProfileSetup = () => {
+    if (!profile) return false
+    return !profile.displayName || !profile.handle
+  }
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!profile) throw new Error("No profile to update")
+
+    const updatedProfile = { ...profile, ...updates }
+    setProfile(updatedProfile)
+
+    console.log("Profile updated:", updatedProfile)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -153,7 +170,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isFirebaseConfigured,
         signIn,
         signUp,
+        updateProfile, // Added updateProfile to context
         logout,
+        needsProfileSetup, // Added needsProfileSetup to context
       }}
     >
       {children}
