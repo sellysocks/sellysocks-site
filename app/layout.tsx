@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Playfair_Display, DM_Sans } from "next/font/google"
+import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/components/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -8,16 +8,10 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
 import { FirebaseSetupBanner } from "@/components/firebase-setup-banner"
 import Script from "next/script"
 
-const playfair = Playfair_Display({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-playfair",
-})
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-dm-sans",
+  variable: "--font-inter",
 })
 
 export const metadata: Metadata = {
@@ -25,11 +19,11 @@ export const metadata: Metadata = {
   description: "A social marketplace where creators sell used personal items directly to fans",
   generator: "Selly Socks",
   manifest: "/manifest.json",
-  themeColor: "#8B4513",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  themeColor: "#FF4D8D",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Selly Socks",
   },
   icons: {
@@ -44,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${inter.variable} dark`}>
       <head>
         <Script id="sw-register" strategy="afterInteractive">
           {`
@@ -62,7 +56,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased bg-background text-foreground overflow-x-hidden">
         <AuthProvider>
           <FirebaseSetupBanner />
           {children}
