@@ -9,29 +9,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Create payment intent with destination charge (splits payment)
-    const paymentIntent = await stripe.paymentIntents.create({
+    const isDemoAccount = sellerAccountId.startsWith("acct_demo") || sellerAccountId.startsWith("acct_seller")
+
+    const paymentIntentConfig: any = {
       amount,
       currency: "gbp",
-      payment_method_types: ["card", "apple_pay", "google_pay"],
-      transfer_data: {
-        destination: sellerAccountId,
-      },
-      application_fee_amount: platformFee,
-      metadata: {
-        orderId,
-        sellerAccountId,
-        platformFee: platformFee.toString(),
-      },
       automatic_payment_methods: {
         enabled: true,
         allow_redirects: "never",
       },
-    })
+      metadata: {
+        orderId,
+        sellerAccountId,
+        platformFee: platformFee.toString(),
+        isDemoAccount: isDemoAccount.toString(),
+      },
+    }
+
+    if (!isDemoAccount) {
+      paymentIntentConfig.transfer_data = {
+        destination: sellerAccountId,
+      }
+      paymentIntentConfig.application_fee_amount = platformFee
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentConfig)
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
+      isDemoAccount,
     })
   } catch (error) {
     console.error("Create payment intent error:", error)
