@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Star, Heart } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/components/auth-provider"
 
 // Mock sellers data
 const sellers = [
@@ -110,6 +111,20 @@ const sellers = [
 ]
 
 export default function SellersPage() {
+  const { isCreatorFavourited, addCreatorToFavourites, removeCreatorFromFavourites } = useAuth()
+
+  const handleCreatorFavouriteToggle = async (sellerId: string) => {
+    try {
+      if (isCreatorFavourited(sellerId)) {
+        await removeCreatorFromFavourites(sellerId)
+      } else {
+        await addCreatorToFavourites(sellerId)
+      }
+    } catch (error) {
+      console.error("Error toggling creator favourite:", error)
+    }
+  }
+
   return (
     <MobileLayout title="Meet the Sellers" subtitle="Discover amazing creators and their stories">
       {/* Search & Filters */}
@@ -183,8 +198,11 @@ export default function SellersPage() {
                     variant="outline"
                     size="sm"
                     className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent"
+                    onClick={() => handleCreatorFavouriteToggle(seller.id)}
                   >
-                    <Heart className="h-4 w-4" />
+                    <Heart
+                      className={`h-4 w-4 ${isCreatorFavourited(seller.id) ? "fill-[#FF4D8D] text-[#FF4D8D]" : ""}`}
+                    />
                   </Button>
                 </div>
 

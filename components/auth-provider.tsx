@@ -22,6 +22,7 @@ interface UserProfile {
   stripeAccountId?: string
   payoutsEnabled?: boolean
   favourites?: string[]
+  favouriteCreators?: string[]
   stats: {
     itemsSold: number
     totalEarnings: number
@@ -44,6 +45,9 @@ interface AuthContextType {
   addToFavourites: (itemId: string) => Promise<void>
   removeFromFavourites: (itemId: string) => Promise<void>
   isFavourited: (itemId: string) => boolean
+  addCreatorToFavourites: (creatorId: string) => Promise<void>
+  removeCreatorFromFavourites: (creatorId: string) => Promise<void>
+  isCreatorFavourited: (creatorId: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -66,6 +70,7 @@ const mockProfile: UserProfile = {
   stripeAccountId: "acct_demo123",
   payoutsEnabled: true,
   favourites: [],
+  favouriteCreators: [],
   stats: {
     itemsSold: 12,
     totalEarnings: 240,
@@ -139,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       stripeAccountId: undefined,
       payoutsEnabled: false,
       favourites: [],
+      favouriteCreators: [],
       stats: {
         itemsSold: 0,
         totalEarnings: 0,
@@ -196,6 +202,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return (profile.favourites || []).includes(itemId)
   }
 
+  const addCreatorToFavourites = async (creatorId: string) => {
+    if (!profile) throw new Error("No profile available")
+
+    const currentFavouriteCreators = profile.favouriteCreators || []
+    if (!currentFavouriteCreators.includes(creatorId)) {
+      const updatedFavouriteCreators = [...currentFavouriteCreators, creatorId]
+      await updateProfile({ favouriteCreators: updatedFavouriteCreators })
+    }
+  }
+
+  const removeCreatorFromFavourites = async (creatorId: string) => {
+    if (!profile) throw new Error("No profile available")
+
+    const currentFavouriteCreators = profile.favouriteCreators || []
+    const updatedFavouriteCreators = currentFavouriteCreators.filter((id) => id !== creatorId)
+    await updateProfile({ favouriteCreators: updatedFavouriteCreators })
+  }
+
+  const isCreatorFavourited = (creatorId: string) => {
+    if (!profile) return false
+    return (profile.favouriteCreators || []).includes(creatorId)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -211,6 +240,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         addToFavourites,
         removeFromFavourites,
         isFavourited,
+        addCreatorToFavourites,
+        removeCreatorFromFavourites,
+        isCreatorFavourited,
       }}
     >
       {children}

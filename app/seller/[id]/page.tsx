@@ -9,6 +9,7 @@ import { Star, Heart, MessageCircle, MapPin, Award } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
 
 // Mock seller data
 const sellers = {
@@ -129,6 +130,7 @@ interface SellerPageProps {
 }
 
 export default function SellerPage({ params }: SellerPageProps) {
+  const { isCreatorFavourited, addCreatorToFavourites, removeCreatorFromFavourites } = useAuth()
   const seller = sellers[params.id as keyof typeof sellers]
   const [reviews, setReviews] = useState<any[]>([])
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
@@ -139,6 +141,18 @@ export default function SellerPage({ params }: SellerPageProps) {
   }
 
   const messageThreadId = `thread-${seller.id.replace("-", "")}`
+
+  const handleCreatorFavouriteToggle = async () => {
+    try {
+      if (isCreatorFavourited(seller.id)) {
+        await removeCreatorFromFavourites(seller.id)
+      } else {
+        await addCreatorToFavourites(seller.id)
+      }
+    } catch (error) {
+      console.error("Error toggling creator favourite:", error)
+    }
+  }
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -235,8 +249,12 @@ export default function SellerPage({ params }: SellerPageProps) {
               Message
             </Link>
           </Button>
-          <Button variant="outline" className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent">
-            <Heart className="h-4 w-4" />
+          <Button
+            variant="outline"
+            className="border-[#262833] text-[#B4B6C2] hover:bg-[#262833] bg-transparent"
+            onClick={handleCreatorFavouriteToggle}
+          >
+            <Heart className={`h-4 w-4 ${isCreatorFavourited(seller.id) ? "fill-[#FF4D8D] text-[#FF4D8D]" : ""}`} />
           </Button>
         </div>
       </div>

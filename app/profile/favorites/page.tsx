@@ -31,21 +31,52 @@ const itemsData = {
   },
 }
 
+const creatorsData = {
+  "emma-rose": {
+    id: "emma-rose",
+    name: "Emma Rose",
+    displayName: "Emma",
+    avatar: "/diverse-woman-avatar.png",
+    verified: true,
+    stats: { rating: 4.9, reviewCount: 23, itemsSold: 47 },
+  },
+  "sophie-luxe": {
+    id: "sophie-luxe",
+    name: "Sophie Luxe",
+    displayName: "Sophie",
+    avatar: "/woman-avatar-3.png",
+    verified: true,
+    stats: { rating: 4.8, reviewCount: 67, itemsSold: 89 },
+  },
+}
+
 export default function ProfileFavoritesPage() {
-  const { profile, removeFromFavourites } = useAuth()
+  const { profile, removeFromFavourites, removeCreatorFromFavourites } = useAuth()
   const router = useRouter()
 
   const favouriteItems = (profile?.favourites || [])
     .map((id) => itemsData[id as keyof typeof itemsData])
     .filter(Boolean)
 
-  const hasFavorites = favouriteItems.length > 0
+  const favouriteCreators = (profile?.favouriteCreators || [])
+    .map((id) => creatorsData[id as keyof typeof creatorsData])
+    .filter(Boolean)
+
+  const hasFavorites = favouriteItems.length > 0 || favouriteCreators.length > 0
 
   const handleRemoveFavourite = async (itemId: string) => {
     try {
       await removeFromFavourites(itemId)
     } catch (error) {
       console.error("Error removing favourite:", error)
+    }
+  }
+
+  const handleRemoveCreatorFavourite = async (creatorId: string) => {
+    try {
+      await removeCreatorFromFavourites(creatorId)
+    } catch (error) {
+      console.error("Error removing creator favourite:", error)
     }
   }
 
@@ -65,34 +96,80 @@ export default function ProfileFavoritesPage() {
       {/* Content */}
       <div className="p-4 pb-24">
         {hasFavorites ? (
-          <div className="space-y-4">
-            {favouriteItems.map((item) => (
-              <div key={item.id} className="bg-card rounded-xl p-4 border border-border">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.title}
-                    className="w-16 h-16 rounded-lg object-cover"
-                  />
-                  <div className="flex-1">
-                    <Link href={`/item/${item.id}`}>
-                      <div className="text-white font-medium hover:text-accent">{item.title}</div>
-                    </Link>
-                    <div className="text-muted-foreground text-sm">
-                      By @{item.seller} • £{item.price}
+          <div className="space-y-6">
+            {favouriteCreators.length > 0 && (
+              <div>
+                <h2 className="text-white font-medium mb-3">Favourite Creators</h2>
+                <div className="space-y-3">
+                  {favouriteCreators.map((creator) => (
+                    <div key={creator.id} className="bg-card rounded-xl p-4 border border-border">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={creator.avatar || "/placeholder.svg"}
+                          alt={creator.name}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <Link href={`/seller/${creator.id}`}>
+                            <div className="text-white font-medium hover:text-accent flex items-center gap-2">
+                              {creator.displayName}
+                              {creator.verified && <span className="text-[#FF4D8D] text-sm">✓</span>}
+                            </div>
+                          </Link>
+                          <div className="text-muted-foreground text-sm">
+                            {creator.stats.rating} ⭐ • {creator.stats.itemsSold} sold
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveCreatorFavourite(creator.id)}
+                          className="text-muted-foreground hover:text-white p-2"
+                        >
+                          <Heart className="h-4 w-4 fill-[#FF4D8D] text-[#FF4D8D]" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveFavourite(item.id)}
-                    className="text-muted-foreground hover:text-white p-2"
-                  >
-                    <Heart className="h-4 w-4 fill-[#FF4D8D] text-[#FF4D8D]" />
-                  </Button>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Favourite Items */}
+            {favouriteItems.length > 0 && (
+              <div>
+                <h2 className="text-white font-medium mb-3">Favourite Items</h2>
+                <div className="space-y-4">
+                  {favouriteItems.map((item) => (
+                    <div key={item.id} className="bg-card rounded-xl p-4 border border-border">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={item.image || "/placeholder.svg"}
+                          alt={item.title}
+                          className="w-16 h-16 rounded-lg object-cover"
+                        />
+                        <div className="flex-1">
+                          <Link href={`/item/${item.id}`}>
+                            <div className="text-white font-medium hover:text-accent">{item.title}</div>
+                          </Link>
+                          <div className="text-muted-foreground text-sm">
+                            By @{item.seller} • £{item.price}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFavourite(item.id)}
+                          className="text-muted-foreground hover:text-white p-2"
+                        >
+                          <Heart className="h-4 w-4 fill-[#FF4D8D] text-[#FF4D8D]" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* Empty State */
