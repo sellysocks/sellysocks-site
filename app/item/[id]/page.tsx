@@ -241,7 +241,7 @@ export default function ItemPage({ params }: { params: { id: string } }) {
           <div className="text-sm text-[#B4B6C2]">📍 {item.location}</div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 bg-[#15161C] border-t border-[#262833] p-4">
+        <div className="fixed bottom-16 left-0 right-0 bg-[#15161C] border-t border-[#262833] p-4 z-50">
           <div className="flex gap-3">
             <Link href={`/messages/thread-${item.seller.id}`} className="flex-1">
               <Button
