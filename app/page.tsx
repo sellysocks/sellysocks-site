@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Heart, Search } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { RecentlyViewed } from "@/components/mobile/recently-viewed"
 
@@ -60,7 +60,7 @@ const featuredItems = [
 ]
 
 export default function HomePage() {
-  const { isFavourited, addToFavourites, removeFromFavourites, addToRecentlyViewed } = useAuth()
+  const { isFavourited, addToFavourites, removeFromFavourites } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
 
@@ -82,23 +82,6 @@ export default function HomePage() {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
   }
-
-  useEffect(() => {
-    // Add some sample recently viewed items for demo
-    const sampleItems = featuredItems.slice(0, 2)
-    sampleItems.forEach(async (item) => {
-      try {
-        await addToRecentlyViewed({
-          itemId: item.id,
-          title: item.title,
-          price: item.price,
-          image: item.images[0],
-        })
-      } catch (error) {
-        console.error("Error adding to recently viewed:", error)
-      }
-    })
-  }, [addToRecentlyViewed])
 
   return (
     <MobileLayout
@@ -126,7 +109,7 @@ export default function HomePage() {
         </form>
 
         <div className="flex gap-2 overflow-x-auto pb-2">
-          <Select>
+          <Select defaultValue="">
             <SelectTrigger className="w-24 bg-[#15161C] border-[#262833] text-white">
               <SelectValue placeholder="Size" />
             </SelectTrigger>
@@ -139,7 +122,7 @@ export default function HomePage() {
             </SelectContent>
           </Select>
 
-          <Select>
+          <Select defaultValue="">
             <SelectTrigger className="w-32 bg-[#15161C] border-[#262833] text-white">
               <SelectValue placeholder="Used For" />
             </SelectTrigger>
@@ -151,7 +134,7 @@ export default function HomePage() {
             </SelectContent>
           </Select>
 
-          <Select>
+          <Select defaultValue="">
             <SelectTrigger className="w-24 bg-[#15161C] border-[#262833] text-white">
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
