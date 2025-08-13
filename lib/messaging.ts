@@ -182,11 +182,33 @@ export class MessagingClient {
 
   async getConversations() {
     try {
-      const response = await fetch("/api/messages")
+      const response = await fetch("/api/messages/conversations")
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text()
+        throw new Error(`Expected JSON, got: ${contentType}. Response: ${text.substring(0, 100)}...`)
+      }
+
       const result = await response.json()
+
+      if (result.success && result.conversations) {
+        this.saveToStorage("conversations", result.conversations)
+      }
+
       return result
     } catch (error) {
       console.error("Failed to get conversations:", error)
+
+      const cachedConversations = this.loadFromStorage("conversations")
+      if (cachedConversations) {
+        return { success: true, conversations: cachedConversations }
+      }
+
       throw error
     }
   }
