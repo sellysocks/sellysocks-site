@@ -14,11 +14,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 })
     }
 
-    // Create payment intent for the tip
     const paymentIntent = await stripe.paymentIntents.create({
       amount, // Amount in cents
       currency: "gbp",
-      payment_method_types: ["card", "apple_pay"],
+      payment_method_types: ["card"],
+      automatic_payment_methods: {
+        enabled: true, // This enables Apple Pay, Google Pay, etc. automatically when available
+      },
       metadata: {
         type: "tip",
         recipientName,
