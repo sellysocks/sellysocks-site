@@ -13,7 +13,6 @@ import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-// import { RecentlyViewed } from "@/components/mobile/recently-viewed"
 
 // Mock data for demo
 const featuredItems = [
@@ -25,7 +24,7 @@ const featuredItems = [
     condition: "Gently Used",
     usedFor: "Workout Sessions",
     images: ["/cozy-cotton-socks.png"],
-    seller: { name: "Emma", avatar: "/diverse-woman-avatar.png", verified: true },
+    seller: { id: "emma-rose", name: "Emma", avatar: "/diverse-woman-avatar.png", verified: true },
   },
   {
     id: "2",
@@ -35,7 +34,7 @@ const featuredItems = [
     condition: "Like New",
     usedFor: "Date Night",
     images: ["/silk-stockings.png"],
-    seller: { name: "Sophie", avatar: "/woman-avatar-2.png", verified: false },
+    seller: { id: "sophie-luxe", name: "Sophie", avatar: "/woman-avatar-2.png", verified: false },
   },
   {
     id: "3",
@@ -45,7 +44,7 @@ const featuredItems = [
     condition: "Well Loved",
     usedFor: "Running",
     images: ["/placeholder-niqvm.png"],
-    seller: { name: "Maya", avatar: "/woman-avatar-3.png", verified: true },
+    seller: { id: "maya-active", name: "Maya", avatar: "/woman-avatar-3.png", verified: true },
   },
   {
     id: "4",
@@ -55,13 +54,58 @@ const featuredItems = [
     condition: "Gently Used",
     usedFor: "Special Occasions",
     images: ["/lace-thigh-high-socks.png"],
-    seller: { name: "Aria", avatar: "/woman-avatar-4.png", verified: true },
+    seller: { id: "aria-elegant", name: "Aria", avatar: "/woman-avatar-4.png", verified: true },
+  },
+]
+
+const additionalItems = [
+  {
+    id: "5",
+    title: "Compression Running Socks",
+    price: 28,
+    size: "M",
+    condition: "Gently Used",
+    usedFor: "Marathon Training",
+    images: ["/placeholder-niqvm.png"],
+    seller: { id: "emma-rose", name: "Emma", avatar: "/diverse-woman-avatar.png", verified: true },
+  },
+  {
+    id: "6",
+    title: "Designer Knee Highs",
+    price: 55,
+    size: "S",
+    condition: "Like New",
+    usedFor: "Fashion Shows",
+    images: ["/placeholder-niqvm.png"],
+    seller: { id: "aria-elegant", name: "Aria", avatar: "/woman-avatar-4.png", verified: true },
+  },
+  {
+    id: "7",
+    title: "Yoga Practice Socks",
+    price: 22,
+    size: "L",
+    condition: "Well Loved",
+    usedFor: "Hot Yoga",
+    images: ["/placeholder-niqvm.png"],
+    seller: { id: "maya-active", name: "Maya", avatar: "/woman-avatar-3.png", verified: true },
+  },
+  {
+    id: "8",
+    title: "Luxury Silk Hosiery",
+    price: 65,
+    size: "M",
+    condition: "Like New",
+    usedFor: "Special Events",
+    images: ["/placeholder-niqvm.png"],
+    seller: { id: "sophie-luxe", name: "Sophie", avatar: "/woman-avatar-2.png", verified: false },
   },
 ]
 
 export default function HomePage() {
   const { isFavourited, addToFavourites, removeFromFavourites } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
+  const [displayedItems, setDisplayedItems] = useState(featuredItems) // Added state for displayed items
+  const [hasMoreItems, setHasMoreItems] = useState(true) // Added state to track if more items available
   const router = useRouter()
 
   const handleFavouriteToggle = async (itemId: string) => {
@@ -81,6 +125,13 @@ export default function HomePage() {
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
+  }
+
+  const handleLoadMore = () => {
+    const currentCount = displayedItems.length
+    const itemsToAdd = additionalItems.slice(0, 4)
+    setDisplayedItems([...displayedItems, ...itemsToAdd])
+    setHasMoreItems(false) // Hide button after loading more items
   }
 
   return (
@@ -148,16 +199,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* <div className="px-4 mb-6">
-        <RecentlyViewed />
-      </div> */}
-
       {/* Featured Items Grid */}
       <div className="px-4">
         <h2 className="text-lg font-semibold text-white mb-4">Featured Items</h2>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
-          {featuredItems.map((item) => (
+          {displayedItems.map((item) => (
             <Card key={item.id} className="bg-[#15161C] border-[#262833] overflow-hidden">
               <div className="aspect-square relative overflow-hidden">
                 <img
@@ -196,17 +243,19 @@ export default function HomePage() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <img
-                      src={item.seller.avatar || "/placeholder.svg"}
-                      alt={item.seller.name}
-                      className="w-5 h-5 rounded-full"
-                    />
-                    <span className="text-xs font-medium text-white">{item.seller.name}</span>
-                    {item.seller.verified && (
-                      <Badge variant="secondary" className="text-xs px-1 bg-[#FF4D8D] text-white border-0">
-                        ✓
-                      </Badge>
-                    )}
+                    <Link href={`/seller/${item.seller.id}`} className="flex items-center gap-2 hover:opacity-80">
+                      <img
+                        src={item.seller.avatar || "/placeholder.svg"}
+                        alt={item.seller.name}
+                        className="w-5 h-5 rounded-full"
+                      />
+                      <span className="text-xs font-medium text-white">{item.seller.name}</span>
+                      {item.seller.verified && (
+                        <Badge variant="secondary" className="text-xs px-1 bg-[#FF4D8D] text-white border-0">
+                          ✓
+                        </Badge>
+                      )}
+                    </Link>
                   </div>
 
                   <Button size="sm" asChild className="h-7 text-xs bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
@@ -218,15 +267,18 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className="text-center">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-[#262833] text-[#B4B6C2] hover:bg-[#15161C] bg-transparent"
-          >
-            Load More Items
-          </Button>
-        </div>
+        {hasMoreItems && (
+          <div className="text-center">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-[#262833] text-[#B4B6C2] hover:bg-[#15161C] bg-transparent"
+              onClick={handleLoadMore}
+            >
+              Load More Items
+            </Button>
+          </div>
+        )}
       </div>
     </MobileLayout>
   )
