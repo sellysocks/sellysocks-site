@@ -190,6 +190,61 @@ const mockConversations = {
       },
     ],
   },
+  "thread-2": {
+    id: "thread-2",
+    participants: [
+      {
+        id: "current-user",
+        name: "You",
+        avatar: "/placeholder.svg",
+      },
+      {
+        id: "sophie-luxe",
+        name: "Sophie Luxe",
+        avatar: "/woman-avatar-3.png",
+        verified: true,
+        rating: 4.8,
+        responseTime: "Usually responds within 1 hour",
+      },
+    ],
+    itemContext: {
+      id: "3",
+      title: "Designer Silk Stockings",
+      image: "/silk-stockings-detail.png",
+      price: 85,
+      status: "active",
+    },
+    messages: [
+      {
+        id: "msg-1",
+        senderId: "current-user",
+        text: "Hi Sophie! I'm interested in your designer silk stockings. They look absolutely stunning!",
+        timestamp: "2024-01-25T18:30:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-2",
+        senderId: "sophie-luxe",
+        text: "Thank you so much! These are from my premium collection - genuine Italian silk with hand-finished seams. They're incredibly luxurious and have this beautiful lustrous finish.",
+        timestamp: "2024-01-25T18:45:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-3",
+        senderId: "current-user",
+        text: "They sound perfect for a special occasion I have coming up. What's the condition like?",
+        timestamp: "2024-01-25T19:00:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-4",
+        senderId: "sophie-luxe",
+        text: "They're in excellent condition - I've only worn them a few times to exclusive events. The silk still has that gorgeous sheen and the elasticity is perfect. They're truly a collector's piece!",
+        timestamp: "2024-01-25T19:15:00Z",
+        status: "delivered",
+      },
+    ],
+  },
 }
 
 interface ChatPageProps {
