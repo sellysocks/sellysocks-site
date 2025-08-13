@@ -87,6 +87,61 @@ const mockConversations = {
       },
     ],
   },
+  "thread-emma": {
+    id: "thread-emma",
+    participants: [
+      {
+        id: "current-user",
+        name: "You",
+        avatar: "/placeholder.svg",
+      },
+      {
+        id: "emma-rose",
+        name: "Emma Rose",
+        avatar: "/diverse-woman-avatar.png",
+        verified: true,
+        rating: 4.9,
+        responseTime: "Usually responds within 2 hours",
+      },
+    ],
+    itemContext: {
+      id: "2",
+      title: "Silk Stockings",
+      image: "/silk-stockings.png",
+      price: 45,
+      status: "active",
+    },
+    messages: [
+      {
+        id: "msg-1",
+        senderId: "current-user",
+        text: "Hi Emma! I saw your silk stockings listing. They look amazing!",
+        timestamp: "2024-01-25T14:30:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-2",
+        senderId: "emma-rose",
+        text: "Thank you! These are some of my favorites. The silk is so luxurious and they have such a beautiful sheen. I've worn them to so many special occasions!",
+        timestamp: "2024-01-25T14:45:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-3",
+        senderId: "current-user",
+        text: "They sound perfect for what I'm looking for. What size are they?",
+        timestamp: "2024-01-25T15:00:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-4",
+        senderId: "emma-rose",
+        text: "They're size medium and fit beautifully. The silk has this amazing stretch that makes them so comfortable to wear. Would you like to see more photos?",
+        timestamp: "2024-01-25T15:15:00Z",
+        status: "delivered",
+      },
+    ],
+  },
 }
 
 interface ChatPageProps {
