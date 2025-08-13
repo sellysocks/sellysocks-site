@@ -16,6 +16,7 @@ import {
   CreditCard,
   Bookmark,
   Shield,
+  ShoppingBag,
 } from "lucide-react"
 import Link from "next/link"
 import { MobileLayout } from "@/components/mobile/mobile-layout"
@@ -61,6 +62,16 @@ export default function ProfilePage() {
       title: "My Listings",
       caption: `${profile.stats.itemsSold + 5} active items`,
       href: "/profile/listings",
+    },
+    {
+      icon: (
+        <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+          <ShoppingBag className="w-4 h-4 text-accent" />
+        </div>
+      ),
+      title: "Your Orders",
+      caption: `${profile.stats.itemsBought || 15} orders placed`,
+      href: "/profile/orders",
     },
     {
       icon: (
