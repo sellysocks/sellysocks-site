@@ -1,7 +1,6 @@
 "use client"
 
 import { MobileLayout } from "@/components/mobile/mobile-layout"
-import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -64,29 +63,6 @@ export default function HomePage() {
       }
       showBack={false}
     >
-      {/* Hero Section */}
-      <div className="px-4 py-8 text-center">
-        <div className="flex justify-center mb-4">
-          <Logo className="h-16 w-auto" />
-        </div>
-        <p className="text-[#B4B6C2] mb-6 text-sm">
-          The social marketplace where creators share their most intimate items with devoted fans.
-        </p>
-        <div className="flex flex-col gap-3">
-          <Button size="sm" asChild className="bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
-            <Link href="/sellers">Meet the Sellers</Link>
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            asChild
-            className="border-[#262833] text-[#B4B6C2] hover:bg-[#15161C] bg-transparent"
-          >
-            <Link href="/auth/signup">Join the Community</Link>
-          </Button>
-        </div>
-      </div>
-
       {/* Search & Filters */}
       <div className="px-4 mb-6">
         <div className="relative mb-4">
