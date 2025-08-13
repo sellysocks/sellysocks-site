@@ -71,6 +71,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
   const subtotal = order.item.price
   const shipping = 3.99
+  const platformFee = Math.round(subtotal * 0.1 * 100) / 100 // 10% platform fee
+  const sellerAmount = subtotal - platformFee
   const total = subtotal + shipping
 
   const handleInputChange = (field: string, value: string) => {
@@ -146,6 +148,14 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                   <span className="text-gray-400">Subtotal</span>
                   <span className="text-white">£{subtotal}</span>
                 </div>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span className="ml-4">• Platform fee (10%)</span>
+                  <span>£{platformFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span className="ml-4">• Seller receives</span>
+                  <span>£{sellerAmount.toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400 flex items-center gap-1">
                     <Truck className="w-4 h-4" />
@@ -158,6 +168,9 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                   <span className="text-white">Total</span>
                   <span className="text-[#FF4D8D]">£{total.toFixed(2)}</span>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Platform fee helps maintain secure payments and marketplace features
+                </p>
               </div>
             </CardContent>
           </Card>
