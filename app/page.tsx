@@ -56,7 +56,14 @@ const featuredItems = [
 
 export default function HomePage() {
   return (
-    <MobileLayout subtitle="Discover unique pieces with stories" showBack={false}>
+    <MobileLayout
+      customHeader={
+        <div className="flex justify-center py-2">
+          <img src="/selly-socks-outline-logo.png" alt="Selly Socks" className="h-8 w-auto" />
+        </div>
+      }
+      showBack={false}
+    >
       {/* Hero Section */}
       <div className="px-4 py-8 text-center">
         <div className="flex justify-center mb-4">

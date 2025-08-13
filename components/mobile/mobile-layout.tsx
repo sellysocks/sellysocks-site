@@ -6,6 +6,7 @@ interface MobileLayoutProps {
   children: React.ReactNode
   title?: string
   subtitle?: string
+  customHeader?: React.ReactNode
   showBack?: boolean
   showPublic?: boolean
   showSettings?: boolean
@@ -17,6 +18,7 @@ export function MobileLayout({
   children,
   title,
   subtitle,
+  customHeader,
   showBack = false,
   showPublic = true,
   showSettings = true,
@@ -25,15 +27,19 @@ export function MobileLayout({
 }: MobileLayoutProps) {
   return (
     <div className="min-h-screen bg-[#0B0B10] flex flex-col">
-      <Header
-        title={title}
-        subtitle={subtitle}
-        showBack={showBack}
-        showPublic={showPublic}
-        showSettings={showSettings}
-        showMenu={showMenu}
-        onBack={onBack}
-      />
+      {customHeader ? (
+        <div className="bg-[#0B0B10] border-b border-[#262833] px-4">{customHeader}</div>
+      ) : (
+        <Header
+          title={title}
+          subtitle={subtitle}
+          showBack={showBack}
+          showPublic={showPublic}
+          showSettings={showSettings}
+          showMenu={showMenu}
+          onBack={onBack}
+        />
+      )}
 
       <main className="flex-1 pb-20 px-4 py-4 space-y-4 max-w-md mx-auto w-full">{children}</main>
 
