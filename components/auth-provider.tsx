@@ -1,17 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
-import {
-  type User,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-} from "firebase/auth"
-import { doc, getDoc, setDoc } from "firebase/firestore"
-import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
+
+// Mock user type for when Firebase isn't available
+interface MockUser {
+  uid: string
+  email: string | null
+  displayName?: string | null
+}
 
 interface UserProfile {
   uid: string
@@ -31,7 +28,7 @@ interface UserProfile {
 }
 
 interface AuthContextType {
-  user: User | null
+  user: MockUser | null
   profile: UserProfile | null
   loading: boolean
   isFirebaseConfigured: boolean
@@ -42,83 +39,103 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Mock user for development/demo purposes
+const mockUser: MockUser = {
+  uid: "demo-user-123",
+  email: "demo@sellysocks.com",
+  displayName: "Demo User",
+}
+
+const mockProfile: UserProfile = {
+  uid: "demo-user-123",
+  email: "demo@sellysocks.com",
+  displayName: "Demo User",
+  avatar: "/diverse-woman-avatar.png",
+  bio: "Love collecting unique socks!",
+  role: "user",
+  verifiedSeller: true,
+  stats: {
+    itemsSold: 12,
+    totalEarnings: 240,
+    rating: 4.8,
+    reviewCount: 15,
+  },
+  createdAt: new Date("2024-01-15"),
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<MockUser | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Check if Firebase environment variables are configured
+  const isFirebaseConfigured = !!(
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  )
+
   useEffect(() => {
-    if (!isFirebaseConfigured || !auth) {
+    // For now, use mock user to demonstrate the UI
+    // In production, this would use Firebase authentication
+    setTimeout(() => {
+      setUser(mockUser)
+      setProfile(mockProfile)
       setLoading(false)
-      return
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user)
-
-      if (user && db) {
-        try {
-          // Fetch user profile from Firestore
-          const profileDoc = await getDoc(doc(db, "users", user.uid))
-          if (profileDoc.exists()) {
-            setProfile(profileDoc.data() as UserProfile)
-          }
-        } catch (error) {
-          console.warn("Failed to fetch user profile:", error)
-        }
-      } else {
-        setProfile(null)
-      }
-
-      setLoading(false)
-    })
-
-    return unsubscribe
+    }, 500)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    if (!isFirebaseConfigured || !auth) {
-      throw new Error("Firebase is not configured. Please set up your environment variables.")
+    if (!isFirebaseConfigured) {
+      // Mock sign in for demo
+      setUser(mockUser)
+      setProfile(mockProfile)
+      return
     }
-    await signInWithEmailAndPassword(auth, email, password)
+
+    // TODO: Implement Firebase sign in when configured
+    throw new Error("Firebase authentication not yet implemented")
   }
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    if (!isFirebaseConfigured || !auth || !db) {
-      throw new Error("Firebase is not configured. Please set up your environment variables.")
+    if (!isFirebaseConfigured) {
+      // Mock sign up for demo
+      const newUser = {
+        uid: `user-${Date.now()}`,
+        email,
+        displayName: displayName || null,
+      }
+      setUser(newUser)
+      setProfile({
+        ...mockProfile,
+        uid: newUser.uid,
+        email,
+        displayName: displayName || "",
+      })
+      return
     }
 
-    const { user } = await createUserWithEmailAndPassword(auth, email, password)
-
-    // Create user profile in Firestore
-    const userProfile: UserProfile = {
-      uid: user.uid,
-      email: user.email!,
-      displayName: displayName || "",
-      role: "user",
-      verifiedSeller: false,
-      stats: {
-        itemsSold: 0,
-        totalEarnings: 0,
-        rating: 0,
-        reviewCount: 0,
-      },
-      createdAt: new Date(),
-    }
-
-    await setDoc(doc(db, "users", user.uid), userProfile)
-    setProfile(userProfile)
+    // TODO: Implement Firebase sign up when configured
+    throw new Error("Firebase authentication not yet implemented")
   }
 
   const logout = async () => {
-    if (!isFirebaseConfigured || !auth) {
-      throw new Error("Firebase is not configured. Please set up your environment variables.")
-    }
-    await signOut(auth)
+    setUser(null)
+    setProfile(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isFirebaseConfigured, signIn, signUp, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading,
+        isFirebaseConfigured,
+        signIn,
+        signUp,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
