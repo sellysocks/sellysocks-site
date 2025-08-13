@@ -27,6 +27,8 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    console.log("Sign up form submitted", { email, displayName, acceptTerms })
+
     if (!acceptTerms) {
       toast({
         title: "Terms required",
@@ -36,19 +38,35 @@ export default function SignUpPage() {
       return
     }
 
+    if (!email || !password || !displayName) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setLoading(true)
 
     try {
+      console.log("Attempting sign up...")
       await signUp(email, password, displayName)
+      console.log("Sign up successful")
+
       toast({
         title: "Welcome to Selly Socks!",
         description: "Your account has been created successfully.",
       })
-      router.push("/")
+
+      setTimeout(() => {
+        router.push("/")
+      }, 1000)
     } catch (error) {
+      console.error("Sign up error:", error)
       toast({
         title: "Sign up failed",
-        description: "Please try again with different details.",
+        description: error instanceof Error ? error.message : "Please try again with different details.",
         variant: "destructive",
       })
     } finally {
