@@ -31,6 +31,7 @@ export default function PayoutsPage() {
   const [payoutData, setPayoutData] = useState<PayoutData | null>(null)
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [withdrawing, setWithdrawing] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -65,6 +66,37 @@ export default function PayoutsPage() {
       setError(err instanceof Error ? err.message : "Failed to load payout data")
     } finally {
       setDataLoading(false)
+    }
+  }
+
+  const handleWithdraw = async () => {
+    if (!payoutData?.balance.available || payoutData.balance.available === 0) {
+      return
+    }
+
+    try {
+      setWithdrawing(true)
+      const response = await fetch("/api/stripe/create-payout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          account_id: profile?.stripeAccountId,
+          amount: payoutData.balance.available,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create payout")
+      }
+
+      // Refresh payout data
+      await fetchPayoutData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to withdraw funds")
+    } finally {
+      setWithdrawing(false)
     }
   }
 
@@ -177,6 +209,49 @@ export default function PayoutsPage() {
                   {payoutData ? formatCurrency(payoutData.balance.pending) : "£0.00"}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">Processing</div>
+              </div>
+            </div>
+
+            {/* Withdraw Funds */}
+            {payoutData && payoutData.balance.available > 0 && (
+              <div className="bg-card rounded-xl p-4 border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="font-medium text-white">Withdraw Funds</div>
+                    <div className="text-sm text-muted-foreground">
+                      Transfer {formatCurrency(payoutData.balance.available)} to your bank account
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleWithdraw}
+                  disabled={withdrawing}
+                  className="w-full bg-accent hover:bg-accent/90 text-white"
+                >
+                  {withdrawing ? "Processing..." : `Withdraw ${formatCurrency(payoutData.balance.available)}`}
+                </Button>
+
+                <div className="text-xs text-muted-foreground mt-2 text-center">
+                  Funds typically arrive in 1-2 business days
+                </div>
+              </div>
+            )}
+
+            {/* Automatic Payouts */}
+            <div className="bg-card rounded-xl p-4 border border-border">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <div className="font-medium text-white">Automatic Payouts</div>
+                  <div className="text-sm text-muted-foreground">Daily at 9:00 AM GMT</div>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Your available balance is automatically transferred to your bank account daily. You can also withdraw
+                manually using the button above.
               </div>
             </div>
 
