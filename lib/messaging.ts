@@ -1,82 +1,79 @@
 export class MessagingClient {
-  private eventSource: EventSource | null = null
+  private pollingInterval: NodeJS.Timeout | null = null
   private messageHandlers: ((message: any) => void)[] = []
   private connectionHandlers: ((connected: boolean) => void)[] = []
   private currentThreadId: string | null = null
   private currentUserId = "current-user"
+  private lastMessageId: string | null = null
+  private isConnected = false
 
   connect(threadId: string, userId = "current-user") {
-    if (this.eventSource) {
-      this.eventSource.close()
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval)
     }
 
     this.currentThreadId = threadId
     this.currentUserId = userId
+    this.isConnected = true
+
+    // Immediately notify connection
+    this.connectionHandlers.forEach((handler) => handler(true))
+
+    // Start polling for new messages
+    this.pollingInterval = setInterval(async () => {
+      try {
+        await this.pollForMessages()
+      } catch (error) {
+        console.error("Polling error:", error)
+      }
+    }, 2000) // Poll every 2 seconds
+
+    console.log("✅ Messaging client connected with polling")
+  }
+
+  private async pollForMessages() {
+    if (!this.currentThreadId) return
 
     try {
-      this.eventSource = new EventSource(`/api/messages/events?threadId=${threadId}&userId=${userId}`)
+      const response = await fetch(`/api/messages?threadId=${this.currentThreadId}`)
+      const result = await response.json()
 
-      this.eventSource.onopen = () => {
-        console.log("✅ SSE connection established")
-        this.connectionHandlers.forEach((handler) => handler(true))
-      }
+      if (result.success && result.messages) {
+        const newMessages = result.messages.filter(
+          (msg: any) => !this.lastMessageId || msg.timestamp > this.lastMessageId,
+        )
 
-      this.eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          this.messageHandlers.forEach((handler) => handler(data))
+        if (newMessages.length > 0) {
+          // Update last message timestamp
+          this.lastMessageId = newMessages[newMessages.length - 1].timestamp
 
-          if (data.type === "new_message") {
-            console.log("📨 New message received:", data.message.text)
-          } else if (data.type === "message_status_update") {
-            console.log("✓ Message status updated:", data.status)
-          } else if (data.type === "user_online") {
-            console.log("🟢 User came online:", data.userId)
-          } else if (data.type === "user_offline") {
-            console.log("🔴 User went offline:", data.userId)
-          } else if (data.type === "connected") {
-            console.log("🔗 Connected to thread:", data.threadId)
-          } else if (data.type === "heartbeat") {
-            // Silent heartbeat
-          }
-        } catch (error) {
-          console.error("Failed to parse SSE message:", error)
-        }
-      }
-
-      this.eventSource.onerror = (error) => {
-        console.error("SSE connection error:", error)
-        console.log("EventSource readyState:", this.eventSource?.readyState)
-
-        if (this.eventSource?.readyState === EventSource.CLOSED) {
-          console.log("SSE connection was closed")
-        } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
-          console.log("SSE connection is reconnecting...")
-          return // Don't trigger reconnection if already connecting
-        }
-
-        this.connectionHandlers.forEach((handler) => handler(false))
-
-        // Only reconnect if we have a current thread and connection is closed
-        if (this.currentThreadId && this.eventSource?.readyState === EventSource.CLOSED) {
-          setTimeout(() => {
-            console.log("🔄 Attempting to reconnect...")
-            this.connect(this.currentThreadId!, this.currentUserId)
-          }, 5000)
+          // Notify handlers of new messages
+          newMessages.forEach((message: any) => {
+            this.messageHandlers.forEach((handler) =>
+              handler({
+                type: "new_message",
+                message,
+              }),
+            )
+          })
         }
       }
     } catch (error) {
-      console.error("Failed to create SSE connection:", error)
-      this.connectionHandlers.forEach((handler) => handler(false))
+      console.error("Failed to poll messages:", error)
+      if (this.isConnected) {
+        this.isConnected = false
+        this.connectionHandlers.forEach((handler) => handler(false))
+      }
     }
   }
 
   disconnect() {
-    if (this.eventSource) {
-      this.eventSource.close()
-      this.eventSource = null
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval)
+      this.pollingInterval = null
     }
     this.currentThreadId = null
+    this.isConnected = false
     this.connectionHandlers.forEach((handler) => handler(false))
   }
 

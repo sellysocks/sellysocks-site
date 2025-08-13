@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-import { Send, ImageIcon, MoreVertical, Star, Heart, Wifi, WifiOff } from "lucide-react"
+import { Send, ImageIcon, MoreVertical, Star, Heart, Wifi } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +37,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   const [sending, setSending] = useState(false)
   const [showTipModal, setShowTipModal] = useState(false)
   const { messages, conversation, loading, error, connected, sendMessage } = useMessages(params.threadId)
-  const [connectionStatus, setConnectionStatus] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -134,18 +134,6 @@ export default function ChatPage({ params }: ChatPageProps) {
     }
   }
 
-  const formatMessageTime = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    } else {
-      return date.toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-    }
-  }
-
   const customHeader = (
     <div className="flex items-center justify-between p-4 border-b bg-card">
       <div className="flex items-center gap-3">
@@ -161,16 +149,12 @@ export default function ChatPage({ params }: ChatPageProps) {
                 Verified
               </Badge>
             )}
-            {connectionStatus ? (
-              <Wifi className="h-3 w-3 text-green-500" />
-            ) : (
-              <WifiOff className="h-3 w-3 text-red-500" />
-            )}
+            <Wifi className="h-3 w-3 text-green-500" />
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             <span>{otherParticipant.rating}</span>
-            <span className="ml-2">{connectionStatus ? "Connected" : "Connecting..."}</span>
+            <span className="ml-2">Connected</span>
           </div>
         </div>
       </div>
@@ -202,12 +186,6 @@ export default function ChatPage({ params }: ChatPageProps) {
 
   return (
     <MobileLayout showBack backHref="/messages" customHeader={customHeader} className="flex flex-col h-screen">
-      {!connectionStatus && (
-        <div className="bg-yellow-100 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
-          <p className="text-xs text-yellow-800 dark:text-yellow-200 text-center">Reconnecting to live chat...</p>
-        </div>
-      )}
-
       <div className="p-4 border-b">
         <Card>
           <CardContent className="p-3">
@@ -273,7 +251,9 @@ export default function ChatPage({ params }: ChatPageProps) {
                   </div>
 
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted-foreground">{formatMessageTime(msg.timestamp)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
                     {isCurrentUser && (
                       <span className="text-xs text-muted-foreground">
                         {msg.status === "read" ? "Read" : msg.status === "delivered" ? "Delivered" : "Sent"}
@@ -290,7 +270,7 @@ export default function ChatPage({ params }: ChatPageProps) {
 
       <div className="border-t bg-card p-4">
         <form onSubmit={handleSendMessage} className="flex items-end gap-2">
-          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
+          <input type="file" accept="image/*" ref={fileInputRef} className="hidden" />
 
           <Button
             type="button"
@@ -298,7 +278,6 @@ export default function ChatPage({ params }: ChatPageProps) {
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             className="flex-shrink-0"
-            disabled={!connectionStatus}
           >
             <ImageIcon className="h-4 w-4" />
           </Button>
@@ -317,13 +296,13 @@ export default function ChatPage({ params }: ChatPageProps) {
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={connectionStatus ? "Type your message..." : "Connecting..."}
-              disabled={sending || !connectionStatus}
+              placeholder="Type your message..."
+              disabled={sending}
               className="resize-none"
             />
           </div>
 
-          <Button type="submit" disabled={sending || !message.trim() || !connectionStatus} className="flex-shrink-0">
+          <Button type="submit" disabled={sending || !message.trim()} className="flex-shrink-0">
             <Send className="h-4 w-4" />
           </Button>
         </form>
