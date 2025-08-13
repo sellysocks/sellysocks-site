@@ -198,10 +198,12 @@ export default function OrdersPage() {
                       </Link>
 
                       {order.canReview && !order.hasReviewed && (
-                        <Button size="sm" className="text-xs bg-accent hover:bg-accent/90 text-white">
-                          <Star className="w-3 h-3 mr-1" />
-                          Review
-                        </Button>
+                        <Link href={`/profile/review/${order.id}`}>
+                          <Button size="sm" className="text-xs bg-accent hover:bg-accent/90 text-white">
+                            <Star className="w-3 h-3 mr-1" />
+                            Review
+                          </Button>
+                        </Link>
                       )}
 
                       <Link href={`/item/${order.itemId}`}>
