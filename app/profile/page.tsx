@@ -14,6 +14,8 @@ import {
   HelpCircle,
   MessageCircle,
   CreditCard,
+  Bookmark,
+  Shield,
 } from "lucide-react"
 import Link from "next/link"
 import { MobileLayout } from "@/components/mobile/mobile-layout"
@@ -78,8 +80,18 @@ export default function ProfilePage() {
         </div>
       ),
       title: "Favorites",
-      caption: "12 saved items",
+      caption: `${(profile.favourites?.length || 0) + (profile.favouriteCreators?.length || 0)} saved`,
       href: "/profile/favorites",
+    },
+    {
+      icon: (
+        <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+          <Bookmark className="w-4 h-4 text-accent" />
+        </div>
+      ),
+      title: "Wishlist",
+      caption: `${profile.wishlist?.length || 0} items with price alerts`,
+      href: "/profile/wishlist",
     },
     {
       icon: (
@@ -90,6 +102,16 @@ export default function ProfilePage() {
       title: "Reviews",
       caption: `${profile.stats.rating} rating`,
       href: "/profile/reviews",
+    },
+    {
+      icon: (
+        <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+          <Shield className="w-4 h-4 text-accent" />
+        </div>
+      ),
+      title: "Verification",
+      caption: "Build trust with buyers",
+      href: "/profile/verification",
     },
     {
       icon: (

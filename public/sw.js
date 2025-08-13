@@ -1,8 +1,23 @@
-const CACHE_NAME = "selly-socks-v1"
-const urlsToCache = ["/", "/sellers", "/sell", "/account", "/messages", "/offline"]
+const CACHE_NAME = "selly-socks-v2"
+const urlsToCache = [
+  "/",
+  "/sellers",
+  "/sell",
+  "/messages",
+  "/profile",
+  "/search",
+  "/offline",
+  "/icons/icon-192x192.png",
+  "/icons/icon-512x512.png",
+  "/selly-socks-outline-logo.png",
+]
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)))
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(urlsToCache)
+    }),
+  )
 })
 
 self.addEventListener("fetch", (event) => {
@@ -14,7 +29,7 @@ self.addEventListener("fetch", (event) => {
         return response || fetch(event.request)
       })
       .catch(() => {
-        // If both cache and network fail, show offline page
+        // If both cache and network fail, show offline page for navigation requests
         if (event.request.destination === "document") {
           return caches.match("/offline")
         }

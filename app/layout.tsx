@@ -4,8 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/components/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
-import { FirebaseSetupBanner } from "@/components/firebase-setup-banner"
 import Script from "next/script"
 
 const inter = Inter({
@@ -27,8 +25,8 @@ export const metadata: Metadata = {
     title: "Selly Socks",
   },
   icons: {
-    icon: "/icon-192.png",
-    apple: "/icon-192.png",
+    icon: "/icons/icon-192x192.png",
+    apple: "/icons/icon-192x192.png",
   },
 }
 
@@ -40,6 +38,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} dark`}>
       <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Selly Socks" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <Script id="sw-register" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {
@@ -58,10 +60,8 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased bg-background text-foreground overflow-x-hidden">
         <AuthProvider>
-          <FirebaseSetupBanner />
           {children}
           <Toaster />
-          <PWAInstallPrompt />
         </AuthProvider>
       </body>
     </html>

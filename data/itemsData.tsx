@@ -1,0 +1,66 @@
+// Mock data for items - in production this would come from your database
+export const itemsData = {
+  "1": {
+    id: "1",
+    title: "Cozy Cotton Socks",
+    price: 25,
+    size: "M",
+    condition: "Gently Used",
+    usedFor: "Workout Sessions",
+    description:
+      "Super soft cotton socks that have been worn for my morning yoga sessions. They're incredibly comfortable and have that perfect worn-in feel. Perfect for someone who loves that cozy, lived-in comfort.",
+    images: ["/cozy-cotton-socks.png", "/sock-detail-1.png", "/sock-detail-2.png"],
+    seller: {
+      id: "emma",
+      name: "Emma",
+      avatar: "/diverse-woman-avatar.png",
+      verified: true,
+      rating: 4.9,
+      sales: 23,
+    },
+    shipping: "Free shipping",
+    location: "London, UK",
+  },
+  "2": {
+    id: "2",
+    title: "Silk Stockings",
+    price: 45,
+    size: "S",
+    condition: "Like New",
+    usedFor: "Date Night",
+    description:
+      "Luxurious silk stockings worn only once for a special evening out. They have that perfect silky smooth texture and elegant sheen. Perfect for someone who appreciates fine lingerie.",
+    images: ["/silk-stockings.png", "/silk-stockings-detail.png"],
+    seller: {
+      id: "sophie",
+      name: "Sophie",
+      avatar: "/woman-avatar-2.png",
+      verified: false,
+      rating: 4.7,
+      sales: 15,
+    },
+    shipping: "£3 shipping",
+    location: "Manchester, UK",
+  },
+  "3": {
+    id: "3",
+    title: "Athletic Ankle Socks",
+    price: 18,
+    size: "L",
+    condition: "Well Loved",
+    usedFor: "Running",
+    description:
+      "My favorite running socks that have been with me through countless morning jogs. They have that perfect broken-in comfort and moisture-wicking properties. Great for active lifestyles.",
+    images: ["/placeholder-niqvm.png"],
+    seller: {
+      id: "maya",
+      name: "Maya",
+      avatar: "/woman-avatar-3.png",
+      verified: true,
+      rating: 4.8,
+      sales: 31,
+    },
+    shipping: "Free shipping",
+    location: "Birmingham, UK",
+  },
+}

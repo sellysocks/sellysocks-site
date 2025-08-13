@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Heart, Search } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { RecentlyViewed } from "@/components/mobile/recently-viewed"
 
 // Mock data for demo
 const featuredItems = [
@@ -59,7 +60,7 @@ const featuredItems = [
 ]
 
 export default function HomePage() {
-  const { isFavourited, addToFavourites, removeFromFavourites } = useAuth()
+  const { isFavourited, addToFavourites, removeFromFavourites, addToRecentlyViewed } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
 
@@ -81,6 +82,23 @@ export default function HomePage() {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
   }
+
+  useEffect(() => {
+    // Add some sample recently viewed items for demo
+    const sampleItems = featuredItems.slice(0, 2)
+    sampleItems.forEach(async (item) => {
+      try {
+        await addToRecentlyViewed({
+          itemId: item.id,
+          title: item.title,
+          price: item.price,
+          image: item.images[0],
+        })
+      } catch (error) {
+        console.error("Error adding to recently viewed:", error)
+      }
+    })
+  }, [addToRecentlyViewed])
 
   return (
     <MobileLayout
@@ -145,6 +163,10 @@ export default function HomePage() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="px-4 mb-6">
+        <RecentlyViewed />
       </div>
 
       {/* Featured Items Grid */}
