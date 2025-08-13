@@ -3,6 +3,8 @@
 import { ChevronLeft, Globe, Settings, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
 
 interface HeaderProps {
   title?: string
@@ -38,10 +40,20 @@ export function Header({
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side */}
         <div className="flex items-center min-w-0">
-          {showBack && (
+          {showBack ? (
             <Button variant="ghost" size="sm" onClick={handleBack} className="p-2 -ml-2 text-white hover:bg-[#15161C]">
               <ChevronLeft className="h-5 w-5" />
             </Button>
+          ) : (
+            <Link href="/" className="flex items-center -ml-2">
+              <Image
+                src="/selly-socks-outline-logo.png"
+                alt="Selly Socks"
+                width={80}
+                height={32}
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
           )}
         </div>
 
