@@ -142,6 +142,54 @@ const mockConversations = {
       },
     ],
   },
+  "thread-emmarose": {
+    id: "thread-emmarose",
+    participants: [
+      {
+        id: "current-user",
+        name: "You",
+        avatar: "/placeholder.svg",
+      },
+      {
+        id: "emma-rose",
+        name: "Emma Rose",
+        avatar: "/diverse-woman-avatar.png",
+        verified: true,
+        rating: 4.9,
+        responseTime: "Usually responds within 2 hours",
+      },
+    ],
+    itemContext: {
+      id: "2",
+      title: "Silk Stockings",
+      image: "/silk-stockings.png",
+      price: 45,
+      status: "active",
+    },
+    messages: [
+      {
+        id: "msg-1",
+        senderId: "current-user",
+        text: "Hi Emma! I'm interested in learning more about your items.",
+        timestamp: "2024-01-25T16:30:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-2",
+        senderId: "emma-rose",
+        text: "Hello! Thank you for reaching out. I'd be happy to tell you about my collection. What are you looking for specifically?",
+        timestamp: "2024-01-25T16:45:00Z",
+        status: "read",
+      },
+      {
+        id: "msg-3",
+        senderId: "current-user",
+        text: "I saw your profile and was impressed by your ratings. Do you have any new items coming soon?",
+        timestamp: "2024-01-25T17:00:00Z",
+        status: "delivered",
+      },
+    ],
+  },
 }
 
 interface ChatPageProps {
