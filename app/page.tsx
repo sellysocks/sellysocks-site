@@ -13,7 +13,7 @@ import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { RecentlyViewed } from "@/components/mobile/recently-viewed"
+// import { RecentlyViewed } from "@/components/mobile/recently-viewed"
 
 // Mock data for demo
 const featuredItems = [
@@ -148,9 +148,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="px-4 mb-6">
+      {/* <div className="px-4 mb-6">
         <RecentlyViewed />
-      </div>
+      </div> */}
 
       {/* Featured Items Grid */}
       <div className="px-4">
