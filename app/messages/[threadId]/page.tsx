@@ -332,7 +332,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             onClick={() => setShowTipModal(true)}
             className="flex-shrink-0 text-pink-500 border-pink-200 hover:bg-pink-50"
           >
-            <Heart className="h-4 w-4" />
+            <span className="text-xs font-medium">Tip</span>
           </Button>
 
           <div className="flex-1">
