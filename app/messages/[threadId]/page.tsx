@@ -325,6 +325,16 @@ export default function ChatPage({ params }: ChatPageProps) {
             <ImageIcon className="h-4 w-4" />
           </Button>
 
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowTipModal(true)}
+            className="flex-shrink-0 text-pink-500 border-pink-200 hover:bg-pink-50"
+          >
+            <Heart className="h-4 w-4" />
+          </Button>
+
           <div className="flex-1">
             <Input
               value={message}
