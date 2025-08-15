@@ -1,66 +1,81 @@
-// Mock data for items - in production this would come from your database
-export const itemsData = {
-  "1": {
-    id: "1",
-    title: "Cozy Cotton Socks",
-    price: 25,
-    size: "M",
-    condition: "Gently Used",
-    usedFor: "Workout Sessions",
-    description:
-      "Super soft cotton socks that have been worn for my morning yoga sessions. They're incredibly comfortable and have that perfect worn-in feel. Perfect for someone who loves that cozy, lived-in comfort.",
-    images: ["/cozy-cotton-socks.png", "/sock-detail-1.png", "/sock-detail-2.png"],
+// This file is kept for backward compatibility but now uses real Supabase data
+import { createClient } from "@/lib/supabase/client"
+
+// Legacy export for any remaining imports - now returns empty object
+// All data should come from Supabase via the updated API routes
+export const itemsData = {}
+
+// Helper functions for components that might still reference this file
+export const getItemById = async (id: string) => {
+  const supabase = createClient()
+
+  const { data: item, error } = await supabase
+    .from("items")
+    .select(`
+      *,
+      profiles:seller_id (
+        id,
+        username,
+        avatar_url,
+        verified,
+        rating
+      )
+    `)
+    .eq("id", id)
+    .eq("status", "active")
+    .single()
+
+  if (error) {
+    console.error("Error fetching item:", error)
+    return null
+  }
+
+  return {
+    ...item,
     seller: {
-      id: "emma",
-      name: "Emma",
-      avatar: "/diverse-woman-avatar.png",
-      verified: true,
-      rating: 4.9,
-      sales: 23,
+      id: item.profiles.id,
+      name: item.profiles.username,
+      avatar: item.profiles.avatar_url,
+      verified: item.profiles.verified,
+      rating: item.profiles.rating,
+      sales: 0,
     },
-    shipping: "Free shipping",
-    location: "London, UK",
-  },
-  "2": {
-    id: "2",
-    title: "Silk Stockings",
-    price: 45,
-    size: "S",
-    condition: "Like New",
-    usedFor: "Date Night",
-    description:
-      "Luxurious silk stockings worn only once for a special evening out. They have that perfect silky smooth texture and elegant sheen. Perfect for someone who appreciates fine lingerie.",
-    images: ["/silk-stockings.png", "/silk-stockings-detail.png"],
+  }
+}
+
+export const getAllItems = async (limit = 20, offset = 0) => {
+  const supabase = createClient()
+
+  const { data: items, error } = await supabase
+    .from("items")
+    .select(`
+      *,
+      profiles:seller_id (
+        id,
+        username,
+        avatar_url,
+        verified,
+        rating
+      )
+    `)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (error) {
+    console.error("Error fetching items:", error)
+    return []
+  }
+
+  return items.map((item) => ({
+    ...item,
     seller: {
-      id: "sophie",
-      name: "Sophie",
-      avatar: "/woman-avatar-2.png",
-      verified: false,
-      rating: 4.7,
-      sales: 15,
+      id: item.profiles.id,
+      name: item.profiles.username,
+      avatar: item.profiles.avatar_url,
+      verified: item.profiles.verified,
+      rating: item.profiles.rating,
+      sales: 0,
     },
-    shipping: "£3 shipping",
-    location: "Manchester, UK",
-  },
-  "3": {
-    id: "3",
-    title: "Athletic Ankle Socks",
-    price: 18,
-    size: "L",
-    condition: "Well Loved",
-    usedFor: "Running",
-    description:
-      "My favorite running socks that have been with me through countless morning jogs. They have that perfect broken-in comfort and moisture-wicking properties. Great for active lifestyles.",
-    images: ["/placeholder-niqvm.png"],
-    seller: {
-      id: "maya",
-      name: "Maya",
-      avatar: "/woman-avatar-3.png",
-      verified: true,
-      rating: 4.8,
-      sales: 31,
-    },
-    shipping: "Free shipping",
-    location: "Birmingham, UK",
-  },
+  }))
 }

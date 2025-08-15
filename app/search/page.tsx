@@ -15,6 +15,7 @@ import { OptimizedImage } from "@/components/ui/optimized-image"
 import { ItemCardSkeleton } from "@/components/ui/loading-skeleton"
 import { Search, Heart, Filter } from "lucide-react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
 interface SearchResult {
   id: string
@@ -25,6 +26,7 @@ interface SearchResult {
   usedFor: string
   images: string[]
   seller: {
+    id: string
     name: string
     avatar: string
     verified: boolean
@@ -56,17 +58,86 @@ export default function SearchPage() {
     }
 
     setLoading(true)
-    try {
-      const params = new URLSearchParams({
-        q: searchQuery,
-        ...filters,
-      })
+    const supabase = createClient()
 
-      const response = await fetch(`/api/search?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        setResults(data.results)
+    try {
+      let query = supabase
+        .from("items")
+        .select(`
+          *,
+          profiles:seller_id (
+            id,
+            username,
+            avatar_url,
+            verified
+          )
+        `)
+        .eq("status", "active")
+
+      if (searchQuery) {
+        query = query.or(
+          `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`,
+        )
       }
+
+      if (filters.size !== "all") {
+        query = query.eq("size", filters.size.toUpperCase())
+      }
+
+      if (filters.condition !== "all") {
+        query = query.eq("condition", filters.condition.replace("-", " "))
+      }
+
+      if (filters.usedFor !== "all") {
+        query = query.eq("used_for", filters.usedFor.replace("-", " "))
+      }
+
+      switch (filters.sortBy) {
+        case "price-low":
+          query = query.order("price", { ascending: true })
+          break
+        case "price-high":
+          query = query.order("price", { ascending: false })
+          break
+        case "popular":
+          query = query.order("view_count", { ascending: false })
+          break
+        case "rating":
+          query = query.order("profiles(rating)", { ascending: false })
+          break
+        case "newest":
+        default:
+          query = query.order("created_at", { ascending: false })
+          break
+      }
+
+      const { data: items, error } = await query.limit(50)
+
+      if (error) {
+        console.error("Search error:", error)
+        return
+      }
+
+      const formattedResults: SearchResult[] =
+        items?.map((item) => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          size: item.size,
+          condition: item.condition,
+          usedFor: item.used_for,
+          images: item.images || [],
+          seller: {
+            id: item.profiles.id,
+            name: item.profiles.username,
+            avatar: item.profiles.avatar_url,
+            verified: item.profiles.verified,
+          },
+          category: item.category,
+          tags: item.tags || [],
+        })) || []
+
+      setResults(formattedResults)
     } catch (error) {
       console.error("Search error:", error)
     } finally {
@@ -276,17 +347,19 @@ export default function SearchPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <OptimizedImage
-                          src={item.seller.avatar}
-                          alt={item.seller.name}
-                          className="w-5 h-5 rounded-full"
-                        />
-                        <span className="text-xs font-medium text-white">{item.seller.name}</span>
-                        {item.seller.verified && (
-                          <Badge variant="secondary" className="text-xs px-1 bg-[#FF4D8D] text-white border-0">
-                            ✓
-                          </Badge>
-                        )}
+                        <Link href={`/seller/${item.seller.id}`} className="flex items-center gap-2 hover:opacity-80">
+                          <OptimizedImage
+                            src={item.seller.avatar}
+                            alt={item.seller.name}
+                            className="w-5 h-5 rounded-full"
+                          />
+                          <span className="text-xs font-medium text-white">{item.seller.name}</span>
+                          {item.seller.verified && (
+                            <Badge variant="secondary" className="text-xs px-1 bg-[#FF4D8D] text-white border-0">
+                              ✓
+                            </Badge>
+                          )}
+                        </Link>
                       </div>
 
                       <Button

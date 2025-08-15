@@ -11,102 +11,79 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Heart, Search } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-
-// Mock data for demo
-const featuredItems = [
-  {
-    id: "1",
-    title: "Cozy Cotton Socks",
-    price: 25,
-    size: "M",
-    condition: "Gently Used",
-    usedFor: "Workout Sessions",
-    images: ["/cozy-cotton-socks.png"],
-    seller: { id: "emma-rose", name: "Emma", avatar: "/diverse-woman-avatar.png", verified: true },
-  },
-  {
-    id: "2",
-    title: "Silk Stockings",
-    price: 45,
-    size: "S",
-    condition: "Like New",
-    usedFor: "Date Night",
-    images: ["/silk-stockings.png"],
-    seller: { id: "sophie-luxe", name: "Sophie", avatar: "/woman-avatar-2.png", verified: false },
-  },
-  {
-    id: "3",
-    title: "Athletic Ankle Socks",
-    price: 18,
-    size: "L",
-    condition: "Well Loved",
-    usedFor: "Running",
-    images: ["/placeholder-niqvm.png"],
-    seller: { id: "maya-active", name: "Maya", avatar: "/woman-avatar-3.png", verified: true },
-  },
-  {
-    id: "4",
-    title: "Lace Thigh Highs",
-    price: 35,
-    size: "M",
-    condition: "Gently Used",
-    usedFor: "Special Occasions",
-    images: ["/lace-thigh-high-socks.png"],
-    seller: { id: "aria-elegant", name: "Aria", avatar: "/woman-avatar-4.png", verified: true },
-  },
-]
-
-const additionalItems = [
-  {
-    id: "5",
-    title: "Compression Running Socks",
-    price: 28,
-    size: "M",
-    condition: "Gently Used",
-    usedFor: "Marathon Training",
-    images: ["/placeholder-niqvm.png"],
-    seller: { id: "emma-rose", name: "Emma", avatar: "/diverse-woman-avatar.png", verified: true },
-  },
-  {
-    id: "6",
-    title: "Designer Knee Highs",
-    price: 55,
-    size: "S",
-    condition: "Like New",
-    usedFor: "Fashion Shows",
-    images: ["/placeholder-niqvm.png"],
-    seller: { id: "aria-elegant", name: "Aria", avatar: "/woman-avatar-4.png", verified: true },
-  },
-  {
-    id: "7",
-    title: "Yoga Practice Socks",
-    price: 22,
-    size: "L",
-    condition: "Well Loved",
-    usedFor: "Hot Yoga",
-    images: ["/placeholder-niqvm.png"],
-    seller: { id: "maya-active", name: "Maya", avatar: "/woman-avatar-3.png", verified: true },
-  },
-  {
-    id: "8",
-    title: "Luxury Silk Hosiery",
-    price: 65,
-    size: "M",
-    condition: "Like New",
-    usedFor: "Special Events",
-    images: ["/placeholder-niqvm.png"],
-    seller: { id: "sophie-luxe", name: "Sophie", avatar: "/woman-avatar-2.png", verified: false },
-  },
-]
+import { createClient } from "@/lib/supabase/client"
 
 export default function HomePage() {
   const { isFavourited, addToFavourites, removeFromFavourites } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
-  const [displayedItems, setDisplayedItems] = useState(featuredItems) // Added state for displayed items
-  const [hasMoreItems, setHasMoreItems] = useState(true) // Added state to track if more items available
+  const [displayedItems, setDisplayedItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [hasMoreItems, setHasMoreItems] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
   const router = useRouter()
+
+  const ITEMS_PER_PAGE = 8
+
+  const fetchItems = async (page = 0, append = false) => {
+    const supabase = createClient()
+
+    try {
+      const { data: items, error } = await supabase
+        .from("items")
+        .select(`
+          *,
+          profiles:seller_id (
+            id,
+            username,
+            avatar_url,
+            verified
+          )
+        `)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1)
+
+      if (error) {
+        console.error("Error fetching items:", error)
+        return
+      }
+
+      const formattedItems =
+        items?.map((item) => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          size: item.size,
+          condition: item.condition,
+          usedFor: item.used_for,
+          images: item.images || [],
+          seller: {
+            id: item.profiles.id,
+            name: item.profiles.username,
+            avatar: item.profiles.avatar_url,
+            verified: item.profiles.verified,
+          },
+        })) || []
+
+      if (append) {
+        setDisplayedItems((prev) => [...prev, ...formattedItems])
+      } else {
+        setDisplayedItems(formattedItems)
+      }
+
+      setHasMoreItems(formattedItems.length === ITEMS_PER_PAGE)
+    } catch (error) {
+      console.error("Error fetching items:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchItems()
+  }, [])
 
   const handleFavouriteToggle = async (itemId: string) => {
     try {
@@ -128,10 +105,26 @@ export default function HomePage() {
   }
 
   const handleLoadMore = () => {
-    const currentCount = displayedItems.length
-    const itemsToAdd = additionalItems.slice(0, 4)
-    setDisplayedItems([...displayedItems, ...itemsToAdd])
-    setHasMoreItems(false) // Hide button after loading more items
+    const nextPage = currentPage + 1
+    setCurrentPage(nextPage)
+    fetchItems(nextPage, true)
+  }
+
+  if (loading) {
+    return (
+      <MobileLayout
+        customHeader={
+          <div className="flex justify-center py-2">
+            <img src="/selly-socks-outline-logo.png" alt="Selly Socks" className="h-8 w-auto" />
+          </div>
+        }
+        showBack={false}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="text-[#B4B6C2]">Loading items...</div>
+        </div>
+      </MobileLayout>
+    )
   }
 
   return (
@@ -203,80 +196,89 @@ export default function HomePage() {
       <div className="px-4">
         <h2 className="text-lg font-semibold text-white mb-4">Featured Items</h2>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {displayedItems.map((item) => (
-            <Card key={item.id} className="bg-[#15161C] border-[#262833] overflow-hidden">
-              <div className="aspect-square relative overflow-hidden">
-                <img
-                  src={item.images[0] || "/placeholder.svg"}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="absolute top-2 right-2 w-8 h-8 p-0 bg-black/50 hover:bg-black/70"
-                  onClick={() => handleFavouriteToggle(item.id)}
-                >
-                  <Heart
-                    className={`h-4 w-4 ${isFavourited(item.id) ? "fill-[#FF4D8D] text-[#FF4D8D]" : "text-white"}`}
-                  />
-                </Button>
-              </div>
-
-              <CardContent className="p-3">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-medium text-sm text-white line-clamp-1">{item.title}</h3>
-                  <span className="font-bold text-[#FF4D8D] text-sm">£{item.price}</span>
-                </div>
-
-                <div className="flex gap-1 mb-2 flex-wrap">
-                  <Badge variant="secondary" className="text-xs bg-[#262833] text-[#B4B6C2] border-0">
-                    Size {item.size}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs border-[#262833] text-[#B4B6C2]">
-                    {item.condition}
-                  </Badge>
-                </div>
-
-                <div className="text-xs text-[#B4B6C2] mb-2">Used for: {item.usedFor}</div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Link href={`/seller/${item.seller.id}`} className="flex items-center gap-2 hover:opacity-80">
-                      <img
-                        src={item.seller.avatar || "/placeholder.svg"}
-                        alt={item.seller.name}
-                        className="w-5 h-5 rounded-full"
+        {displayedItems.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {displayedItems.map((item) => (
+                <Card key={item.id} className="bg-[#15161C] border-[#262833] overflow-hidden">
+                  <div className="aspect-square relative overflow-hidden">
+                    <img
+                      src={item.images[0] || "/placeholder.svg"}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute top-2 right-2 w-8 h-8 p-0 bg-black/50 hover:bg-black/70"
+                      onClick={() => handleFavouriteToggle(item.id)}
+                    >
+                      <Heart
+                        className={`h-4 w-4 ${isFavourited(item.id) ? "fill-[#FF4D8D] text-[#FF4D8D]" : "text-white"}`}
                       />
-                      <span className="text-xs font-medium text-white">{item.seller.name}</span>
-                      {item.seller.verified && (
-                        <Badge variant="secondary" className="text-xs px-1 bg-[#FF4D8D] text-white border-0">
-                          ✓
-                        </Badge>
-                      )}
-                    </Link>
+                    </Button>
                   </div>
 
-                  <Button size="sm" asChild className="h-7 text-xs bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
-                    <Link href={`/item/${item.id}`}>View</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-medium text-sm text-white line-clamp-1">{item.title}</h3>
+                      <span className="font-bold text-[#FF4D8D] text-sm">£{item.price}</span>
+                    </div>
 
-        {hasMoreItems && (
-          <div className="text-center">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-[#262833] text-[#B4B6C2] hover:bg-[#15161C] bg-transparent"
-              onClick={handleLoadMore}
-            >
-              Load More Items
-            </Button>
+                    <div className="flex gap-1 mb-2 flex-wrap">
+                      <Badge variant="secondary" className="text-xs bg-[#262833] text-[#B4B6C2] border-0">
+                        Size {item.size}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs border-[#262833] text-[#B4B6C2]">
+                        {item.condition}
+                      </Badge>
+                    </div>
+
+                    <div className="text-xs text-[#B4B6C2] mb-2">Used for: {item.usedFor}</div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/seller/${item.seller.id}`} className="flex items-center gap-2 hover:opacity-80">
+                          <img
+                            src={item.seller.avatar || "/placeholder.svg"}
+                            alt={item.seller.name}
+                            className="w-5 h-5 rounded-full"
+                          />
+                          <span className="text-xs font-medium text-white">{item.seller.name}</span>
+                          {item.seller.verified && (
+                            <Badge variant="secondary" className="text-xs px-1 bg-[#FF4D8D] text-white border-0">
+                              ✓
+                            </Badge>
+                          )}
+                        </Link>
+                      </div>
+
+                      <Button size="sm" asChild className="h-7 text-xs bg-[#FF4D8D] hover:bg-[#FF4D8D]/90 text-white">
+                        <Link href={`/item/${item.id}`}>View</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {hasMoreItems && (
+              <div className="text-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-[#262833] text-[#B4B6C2] hover:bg-[#15161C] bg-transparent"
+                  onClick={handleLoadMore}
+                >
+                  Load More Items
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-[#B4B6C2] mb-2">No items available yet</div>
+            <div className="text-sm text-[#B4B6C2]">Items will appear here once sellers start listing them.</div>
           </div>
         )}
       </div>

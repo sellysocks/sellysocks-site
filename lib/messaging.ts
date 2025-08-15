@@ -3,7 +3,7 @@ export class MessagingClient {
   private messageHandlers: ((message: any) => void)[] = []
   private connectionHandlers: ((connected: boolean) => void)[] = []
   private currentThreadId: string | null = null
-  private currentUserId = "current-user"
+  private currentUserId: string | null = null
   private lastMessageId: string | null = null
   private isConnected = false
 
@@ -30,13 +30,13 @@ export class MessagingClient {
     return null
   }
 
-  connect(threadId: string, userId = "current-user") {
+  connect(threadId: string, userId?: string) {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval)
     }
 
     this.currentThreadId = threadId
-    this.currentUserId = userId
+    this.currentUserId = userId || "anonymous"
     this.isConnected = true
 
     this.lastMessageId = this.loadFromStorage(`lastMessage_${threadId}`)
@@ -213,9 +213,10 @@ export class MessagingClient {
     }
   }
 
-  async getConversations() {
+  async getConversations(userId?: string) {
     try {
-      const response = await fetch("/api/messages/conversations")
+      const url = userId ? `/api/messages/conversations?userId=${userId}` : "/api/messages/conversations"
+      const response = await fetch(url)
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

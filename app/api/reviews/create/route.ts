@@ -1,33 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-
-// Mock database for reviews
-const mockReviews: any[] = [
-  {
-    id: "review-1",
-    orderId: "order-1",
-    sellerId: "sophie-luxe",
-    itemId: "2",
-    rating: 5,
-    comment:
-      "Amazing quality and exactly as described! Sophie was so sweet and the packaging was perfect. Will definitely buy again!",
-    reviewerId: "demo-user-123",
-    reviewerName: "Sarah M.",
-    reviewerAvatar: "/diverse-user-avatars.png",
-    createdAt: new Date("2024-01-25").toISOString(),
-  },
-  {
-    id: "review-2",
-    orderId: "order-4",
-    sellerId: "emma-rose",
-    itemId: "1",
-    rating: 5,
-    comment: "Super fast shipping and great communication. The item was even better than expected!",
-    reviewerId: "user-456",
-    reviewerName: "Jessica L.",
-    reviewerAvatar: "/diverse-user-avatar-set-2.png",
-    createdAt: new Date("2024-01-18").toISOString(),
-  },
-]
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,27 +11,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
+    const supabase = createClient()
+
     // Check if review already exists for this order
-    const existingReview = mockReviews.find((review) => review.orderId === orderId)
+    const { data: existingReview } = await supabase.from("reviews").select("id").eq("order_id", orderId).single()
+
     if (existingReview) {
       return NextResponse.json({ error: "Review already exists for this order" }, { status: 409 })
     }
 
     // Create new review
-    const newReview = {
-      id: `review-${Date.now()}`,
-      orderId,
-      sellerId,
-      itemId,
-      rating,
-      comment: comment || "",
-      reviewerId,
-      reviewerName,
-      reviewerAvatar,
-      createdAt: new Date().toISOString(),
-    }
+    const { data: newReview, error } = await supabase
+      .from("reviews")
+      .insert({
+        order_id: orderId,
+        seller_id: sellerId,
+        item_id: itemId,
+        reviewer_id: reviewerId,
+        rating,
+        comment: comment || "",
+        reviewer_name: reviewerName,
+        reviewer_avatar: reviewerAvatar,
+      })
+      .select()
+      .single()
 
-    mockReviews.push(newReview)
+    if (error) {
+      console.error("Error creating review:", error)
+      return NextResponse.json({ error: "Failed to create review" }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true, review: newReview })
   } catch (error) {

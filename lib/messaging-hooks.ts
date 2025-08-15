@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { messagingClient } from "./messaging"
+import { useAuth } from "@/components/auth-provider"
 
-export function useConversations(userId = "current-user") {
+export function useConversations() {
+  const { user, profile } = useAuth()
   const [conversations, setConversations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -11,7 +13,8 @@ export function useConversations(userId = "current-user") {
   const fetchConversations = useCallback(async () => {
     try {
       setLoading(true)
-      const result = await messagingClient.getConversations()
+      const userId = user?.id || profile?.id
+      const result = await messagingClient.getConversations(userId)
       if (result.success) {
         setConversations(result.conversations)
         setError(null)
@@ -23,7 +26,7 @@ export function useConversations(userId = "current-user") {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user?.id, profile?.id])
 
   useEffect(() => {
     fetchConversations()
@@ -38,6 +41,7 @@ export function useConversations(userId = "current-user") {
 }
 
 export function useMessages(threadId: string) {
+  const { user, profile } = useAuth()
   const [messages, setMessages] = useState<any[]>([])
   const [conversation, setConversation] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -83,8 +87,8 @@ export function useMessages(threadId: string) {
   useEffect(() => {
     fetchMessages()
 
-    // Connect to real-time updates
-    messagingClient.connect(threadId)
+    const userId = user?.id || profile?.id
+    messagingClient.connect(threadId, userId)
     setConnected(true)
 
     const unsubscribe = messagingClient.onMessage((data) => {
@@ -106,7 +110,7 @@ export function useMessages(threadId: string) {
       messagingClient.disconnect()
       setConnected(false)
     }
-  }, [threadId, fetchMessages])
+  }, [threadId, fetchMessages, user?.id, profile?.id])
 
   return {
     messages,

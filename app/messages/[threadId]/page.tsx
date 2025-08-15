@@ -41,6 +41,8 @@ export default function ChatPage({ params }: ChatPageProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const currentUserId = user?.id || profile?.id || "anonymous"
+
   useEffect(() => {
     const unsubscribe = messagingClient.onConnectionChange((isConnected) => {
       setConnectionStatus(isConnected)
@@ -86,7 +88,7 @@ export default function ChatPage({ params }: ChatPageProps) {
     notFound()
   }
 
-  const otherParticipant = conversation.participants.find((p: any) => p.id !== "current-user")!
+  const otherParticipant = conversation.participants.find((p: any) => p.id !== currentUserId)!
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,7 +96,7 @@ export default function ChatPage({ params }: ChatPageProps) {
 
     setSending(true)
     try {
-      await sendMessage("current-user", message.trim())
+      await sendMessage(currentUserId, message.trim())
       setMessage("")
 
       toast({
@@ -118,7 +120,7 @@ export default function ChatPage({ params }: ChatPageProps) {
       try {
         // In a real app, you'd upload the image to a storage service first
         const imageUrl = "/placeholder.svg" // Placeholder for uploaded image
-        await sendMessage("current-user", "Shared an image", imageUrl)
+        await sendMessage(currentUserId, "Shared an image", imageUrl)
 
         toast({
           title: "Image uploaded",
@@ -220,7 +222,7 @@ export default function ChatPage({ params }: ChatPageProps) {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
           {messages.map((msg: any) => {
-            const isCurrentUser = msg.senderId === "current-user"
+            const isCurrentUser = msg.senderId === currentUserId
             const sender = conversation.participants.find((p: any) => p.id === msg.senderId)!
 
             return (
