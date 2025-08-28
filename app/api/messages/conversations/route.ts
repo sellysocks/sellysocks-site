@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId") || "current-user"
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { data: conversations, error } = await supabase
       .from("conversations")
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "At least 2 participants required" }, { status: 400 })
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { data: newConversation, error: convError } = await supabase
       .from("conversations")
