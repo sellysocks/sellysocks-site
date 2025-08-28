@@ -20,12 +20,11 @@ export async function GET(request: NextRequest) {
       .from("items")
       .select(`
         *,
-        profiles:seller_id (
+        seller:users!seller_id (
           id,
           username,
-          avatar_url,
-          verified,
-          rating
+          full_name,
+          avatar_url
         )
       `)
       .eq("status", "active")
@@ -61,7 +60,7 @@ export async function GET(request: NextRequest) {
         queryBuilder = queryBuilder.order("view_count", { ascending: false })
         break
       case "rating":
-        queryBuilder = queryBuilder.order("profiles(rating)", { ascending: false })
+        queryBuilder = queryBuilder.order("created_at", { ascending: false })
         break
       case "newest":
       default:
@@ -86,9 +85,9 @@ export async function GET(request: NextRequest) {
         usedFor: item.used_for,
         images: item.images,
         seller: {
-          name: item.profiles.username,
-          avatar: item.profiles.avatar_url,
-          verified: item.profiles.verified,
+          name: item.seller.username || item.seller.full_name,
+          avatar: item.seller.avatar_url,
+          verified: false,
         },
         category: item.category,
         tags: item.tags,
